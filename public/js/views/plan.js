@@ -7,13 +7,27 @@ const PlanView = {
   activeTab: 'suggestions',
   activeRecipeId: null,
 
+  formatWeekRange(weekOfStr) {
+    if (!weekOfStr) return '';
+    try {
+      const startDate = new Date(weekOfStr + 'T00:00:00');
+      const endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+      
+      const startFormatted = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const endFormatted = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      
+      return `${startFormatted} – ${endFormatted}`;
+    } catch(e) {
+      return weekOfStr;
+    }
+  },
+
   async render() {
     const isGrid = this.state.viewMode === 'grid';
     return `
       <div class="view" id="plan-view">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h2>Current Week Plan</h2>
-          <button class="btn btn-outline" onclick="PlanView.refresh()">Refresh</button>
+        <div id="plan-header-title" style="margin-bottom: 1.5rem;">
+          <h2>Current Week</h2>
         </div>
         
         <div id="plan-content" style="margin-bottom: 3rem;">
@@ -100,6 +114,12 @@ const PlanView = {
     const content = document.getElementById('plan-content');
     try {
       const plan = await api.plan.current();
+      
+      const titleEl = document.getElementById('plan-header-title');
+      if (titleEl) {
+        titleEl.innerHTML = `<h2>Current Week (${this.formatWeekRange(plan.weekOf)})</h2>`;
+      }
+
       const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       
       const dailyMeals = {};
@@ -117,40 +137,46 @@ const PlanView = {
         });
       }
 
-      let html = `<div style="background: var(--surface); padding: 1.5rem; border-radius: 1.25rem; border: 1px solid var(--border); margin-bottom: 2rem;">`;
-      html += `<h3 style="font-size: 1.25rem;">Week of ${plan.weekOf}</h3>`;
-      html += `</div>`;
-      
-      html += `<h3 style="font-size: 1.25rem; margin-bottom: 1rem;">Weekly Calendar</h3>`;
-      html += `<div class="calendar-grid">`;
+      let html = `<div class="calendar-grid">`;
       
       daysOfWeek.forEach(day => {
         const meals = dailyMeals[day];
         html += `
           <div class="calendar-day-card">
-            <div>
-              <div class="day-title">${day}</div>
-              ${meals.length > 0 ? meals.map(m => `
-                <div style="margin-bottom: 0.75rem;">
-                  <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" class="day-recipe-name" style="text-decoration: underline; color: var(--primary); cursor: pointer; display: block; margin-bottom: 0.25rem;">
-                    ${m.recipeId.replace(/-/g, ' ')}
-                  </a>
-                  <div style="font-size: 0.8rem; color: var(--text-muted);">Servings: ${m.servings}</div>
-                </div>
-              `).join('') : '<p style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; margin-bottom: 0.5rem;">No meals planned</p>'}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.4rem;">
+              <span class="day-title" style="font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px;">${day.toUpperCase()}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>
             </div>
             
-            ${meals.length > 0 ? `
-              <div style="margin-top: auto;">
-                ${meals.map(m => `
-                  <button class="btn btn-outline" style="border-color: var(--danger); color: var(--danger); width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; margin-top: 0.25rem;" onclick="PlanView.removeMeal('${m.recipeId}')">Remove</button>
-                `).join('')}
-              </div>
-            ` : `
-              <div style="margin-top: auto;">
-                <button class="btn btn-outline" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem;" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">+ Add Meal</button>
-              </div>
-            `}
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1;">
+              ${meals.length > 0 ? meals.map(m => {
+                const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                return `
+                  <div class="day-meal-item" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.6rem; padding: 0.65rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.35rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                      <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" style="font-weight: 600; font-size: 0.85rem; color: var(--text); text-decoration: none; line-height: 1.3;">
+                        🍳 ${cleanTitle}
+                      </a>
+                      <button onclick="PlanView.removeMeal('${m.recipeId}')" title="Remove ${cleanTitle}" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; cursor: pointer; padding: 0.15rem 0.4rem; font-size: 0.75rem; border-radius: 0.35rem; line-height: 1; flex-shrink: 0;">
+                        ✕
+                      </button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;">
+                      <span>🍽️ ${m.servings} servings</span>
+                      <button onclick="PlanView.viewRecipe('${m.recipeId}')" style="background: none; border: none; color: var(--primary); font-size: 0.75rem; cursor: pointer; padding: 0;">Details →</button>
+                    </div>
+                  </div>
+                `;
+              }).join('') : `
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.08); border-radius: 0.6rem; padding: 1.25rem 0.5rem; text-align: center;">
+                  <p style="color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-bottom: 0;">No meals planned</p>
+                </div>
+              `}
+            </div>
+
+            <div style="margin-top: 0.75rem;">
+              <button class="btn btn-outline" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; border-radius: 0.5rem;" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">+ Add Meal</button>
+            </div>
           </div>
         `;
       });

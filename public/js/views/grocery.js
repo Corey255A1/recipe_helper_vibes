@@ -31,18 +31,52 @@ const GroceryView = {
         summaryEl.innerHTML = `<p style="color: var(--text-muted);">Your current plan is empty.</p>`;
         return;
       }
-      
-      let html = `<div style="background: var(--surface); padding: 1rem; border-radius: 0.75rem; border: 1px solid var(--border);">`;
-      html += `<h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Current Plan Summary</h3>`;
-      html += `<ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem;">`;
-      
+
+      const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const dailyMeals = {};
+      daysOfWeek.forEach(d => dailyMeals[d] = []);
+
+      let unassigned = [];
+
       plan.meals.forEach(meal => {
-        html += `<li style="background: rgba(255, 255, 255, 0.05); padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem;">
-          <strong>${meal.recipeId.replace(/-/g, ' ')}</strong> (${meal.servings} servings)
-        </li>`;
+        if (meal.assignedDays && meal.assignedDays.length > 0) {
+          meal.assignedDays.forEach(day => {
+            if (dailyMeals[day]) dailyMeals[day].push(meal);
+          });
+        } else {
+          unassigned.push(meal);
+        }
       });
-      
-      html += `</ul></div>`;
+
+      let html = `<div style="background: var(--surface); padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border);">`;
+      html += `<h3 style="font-size: 1.1rem; margin-bottom: 1rem; font-weight: 600;">📅 Current Weekly Schedule</h3>`;
+      html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem;">`;
+
+      daysOfWeek.forEach(day => {
+        const meals = dailyMeals[day];
+        const dayShort = day.substring(0, 3);
+        html += `
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 0.75rem; border-radius: 0.6rem;">
+            <div style="font-weight: 600; font-size: 0.8rem; color: var(--primary); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.5px;">${dayShort}</div>
+            ${meals.length > 0 ? meals.map(m => `
+              <div style="font-size: 0.8rem; color: var(--text); font-weight: 500; margin-bottom: 0.25rem; line-height: 1.3;">
+                ${m.recipeId.replace(/-/g, ' ')}
+              </div>
+            `).join('') : `<div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">No meal</div>`}
+          </div>
+        `;
+      });
+
+      if (unassigned.length > 0) {
+        html += `
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 0.75rem; border-radius: 0.6rem;">
+            <div style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">Unassigned</div>
+            ${unassigned.map(m => `<div style="font-size: 0.8rem; color: var(--text); font-weight: 500; margin-bottom: 0.25rem;">${m.recipeId.replace(/-/g, ' ')}</div>`).join('')}
+          </div>
+        `;
+      }
+
+      html += `</div></div>`;
       summaryEl.innerHTML = html;
     } catch (e) {
       summaryEl.innerHTML = `<p style="color: var(--danger);">Failed to load plan summary.</p>`;
