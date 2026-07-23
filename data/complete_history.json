@@ -1,0 +1,66 @@
+{
+  "weeks": [
+    {
+      "weekOf": "2026-05-31",
+      "status": "finalized",
+      "meals": [
+        {
+          "recipeId": "easy-pork-schnitzel",
+          "assignedDays": [
+            "Monday",
+            "Tuesday"
+          ],
+          "servings": 4
+        },
+        {
+          "recipeId": "quick-5-ingredient-avocado-pasta",
+          "assignedDays": [
+            "Wednesday",
+            "Thursday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "simple-ground-beef-tacos",
+          "assignedDays": [
+            "Friday",
+            null
+          ],
+          "servings": 3
+        }
+      ],
+      "finalizedAt": "2026-06-05T00:00:00.000Z"
+    },
+    {
+      "weekOf": "2026-06-07",
+      "status": "finalized",
+      "meals": [
+        {
+          "recipeId": "easy-baked-beef-meatballs",
+          "assignedDays": [
+            "Monday",
+            "Tuesday"
+          ],
+          "servings": 6
+        },
+        {
+          "recipeId": "baked-homemade-fish-sticks",
+          "assignedDays": [
+            "Wednesday",
+            "Thursday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "easy-greek-pita-pizzas",
+          "assignedDays": [
+            "Friday",
+            null
+          ],
+          "servings": 3
+        }
+      ],
+      "finalizedAt": "2026-06-12T00:00:00.000Z"
+    }
+  ]
+}

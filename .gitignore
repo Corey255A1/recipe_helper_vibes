@@ -1,0 +1,6 @@
+node_modules/
+.env
+data/recipes/
+data/context.json
+data/history.json
+data/current_week.json
