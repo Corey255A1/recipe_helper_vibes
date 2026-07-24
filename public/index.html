@@ -34,6 +34,19 @@
             <h3>Assign Days for this Meal</h3>
             <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">Select the day(s) you plan to eat this meal. Multi-day selection works great for leftovers!</p>
             
+            <div class="meal-type-selector" style="margin-bottom: 1.5rem;">
+                <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Meal Type</h4>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="meal-type-radios">
+                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Breakfast"> <span>🥞 Breakfast</span></label>
+                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Lunch"> <span>🥗 Lunch</span></label>
+                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Dinner" checked> <span>🍽️ Dinner</span></label>
+                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Snack"> <span>🥨 Snack</span></label>
+                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Dessert"> <span>🍰 Dessert</span></label>
+                </div>
+            </div>
+            
+            <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Days</h4>
+            
             <div class="day-checkboxes">
                 <label class="day-chip"><input type="checkbox" value="Monday"> <span>Mon</span></label>
                 <label class="day-chip"><input type="checkbox" value="Tuesday"> <span>Tue</span></label>
@@ -61,11 +74,24 @@
         </div>
     </div>
 
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 420px;">
+            <h3 id="confirm-modal-title" style="margin-bottom: 0.5rem;">Confirm Action</h3>
+            <p id="confirm-modal-message" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;"></p>
+            <div class="modal-actions" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button id="confirm-modal-cancel" class="btn btn-outline">Cancel</button>
+                <button id="confirm-modal-action" class="btn" style="background: var(--danger);">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
     
     <script src="/js/components/toast.js"></script>
     <script src="/js/components/loader.js"></script>
     <script src="/js/components/recipeCard.js"></script>
+    <script src="/js/components/confirmModal.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/views/context.js"></script>
     <script src="/js/views/plan.js"></script>

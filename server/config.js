@@ -9,7 +9,7 @@ module.exports = {
     context: path.join(__dirname, '..', 'data', 'context.json'),
     history: path.join(__dirname, '..', 'data', 'history.json'),
     completeHistory: path.join(__dirname, '..', 'data', 'complete_history.json'),
-    currentWeek: path.join(__dirname, '..', 'data', 'current_week.json'),
+    plans: path.join(__dirname, '..', 'data', 'plans.json'),
     recipesDir: path.join(__dirname, '..', 'data', 'recipes')
   }
 };

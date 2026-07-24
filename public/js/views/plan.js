@@ -1,8 +1,12 @@
 const PlanView = {
   state: {
+    plans: [],
+    expandedWeekOf: null,
     suggestions: [],
     viewMode: 'grid',
-    cachedRecipes: []
+    cachedRecipes: [],
+    suggestCategory: '',
+    cacheCategory: ''
   },
   activeTab: 'suggestions',
   activeRecipeId: null,
@@ -27,23 +31,23 @@ const PlanView = {
     return `
       <div class="view" id="plan-view">
         <div id="plan-header-title" style="margin-bottom: 1.5rem;">
-          <h2>Current Week</h2>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Meal Plans</h2>
+            <button class="btn btn-outline" onclick="PlanView.addFutureWeek()">+ Add Week</button>
+          </div>
         </div>
         
         <div id="plan-content" style="margin-bottom: 3rem;">
-          ${Loader.render('Loading plan...')}
+          ${Loader.render('Loading plans...')}
         </div>
 
         <div id="discover-section" style="border-top: 1px solid var(--border); padding-top: 2rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <h2>Discover Meals</h2>
             
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-              <button class="btn" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.suggest()">✨ Suggest Meals</button>
-              <div style="display: flex; gap: 0.25rem; background: var(--surface); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
-                <button id="view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲 Grid</button>
-                <button id="view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">☰ List</button>
-              </div>
+            <div style="display: flex; gap: 0.25rem; background: var(--surface); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+              <button id="view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲 Grid</button>
+              <button id="view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">☰ List</button>
             </div>
           </div>
 
@@ -55,13 +59,34 @@ const PlanView = {
           </div>
           
           <div id="discover-suggestions-pane" class="tab-pane active">
+            <!-- AI Meal Generator Toolbar -->
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+              <div>
+                <h4 style="margin-bottom: 0.25rem; font-size: 1rem;">✨ AI Meal Generator</h4>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Select a meal type focus and let AI suggest options for your week.</p>
+              </div>
+              
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <div id="suggest-category-bar" style="display: flex; gap: 0.35rem; overflow-x: auto;">
+                   <button class="btn btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('')">All</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Breakfast')">🥞 Breakfast</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Lunch')">🥗 Lunch</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Dinner')">🍽️ Dinner</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Snack')">🥨 Snack</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Dessert')">🍰 Dessert</button>
+                </div>
+                
+                <button class="btn" style="padding: 0.45rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem; white-space: nowrap;" onclick="PlanView.suggest()">✨ Generate Suggestions</button>
+              </div>
+            </div>
+
             <div id="discover-content">
-              <p style="color: var(--text-secondary);">Click "Suggest Meals" to get AI recommendations based on your preferences.</p>
+              <p style="color: var(--text-secondary);">Click "Generate Suggestions" to get AI recommendations based on your preferences.</p>
             </div>
           </div>
 
           <div id="discover-cached-pane" class="tab-pane" style="display: none;">
-            <div style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
               <input type="text" id="cache-search" placeholder="Search saved recipes..." oninput="PlanView.filterAndSortCache()" style="margin-bottom: 0; flex: 1; min-width: 200px;">
               <select id="cache-sort" onchange="PlanView.filterAndSortCache()" style="margin-bottom: 0; padding: 0.5rem 1rem; border-radius: 0.5rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 0.875rem;">
                 <option value="recent" selected>Sort by: Date Added (Newest First)</option>
@@ -69,6 +94,16 @@ const PlanView = {
                 <option value="title">Sort by: Title (A - Z)</option>
               </select>
             </div>
+
+            <div id="cache-category-bar" style="margin-bottom: 1.5rem; display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.25rem;">
+               <button class="btn btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('')">All Saved</button>
+               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Breakfast')">🥞 Breakfast</button>
+               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Lunch')">🥗 Lunch</button>
+               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Dinner')">🍽️ Dinner</button>
+               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Snack')">🥨 Snack</button>
+               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Dessert')">🍰 Dessert</button>
+            </div>
+
             <div id="cache-content">
               ${Loader.render('Loading recipe library...')}
             </div>
@@ -106,13 +141,95 @@ const PlanView = {
 
   async init() {
     this.activeTab = this.activeTab || 'suggestions';
-    const plan = await api.plan.current();
-    if (plan && plan.pendingSuggestions && plan.pendingSuggestions.length > 0) {
-      this.state.suggestions = plan.pendingSuggestions;
+    this.state.suggestCategory = '';
+    this.state.cacheCategory = '';
+    
+    try {
+      this.state.plans = await api.plan.plans();
+      if (this.state.plans && this.state.plans.length > 0) {
+        if (!this.state.expandedWeekOf) {
+          this.state.expandedWeekOf = this.state.plans[0].weekOf;
+        }
+        const activePlan = this.state.plans.find(p => p.weekOf === this.state.expandedWeekOf);
+        if (activePlan && activePlan.pendingSuggestions && activePlan.pendingSuggestions.length > 0) {
+          this.state.suggestions = activePlan.pendingSuggestions;
+        }
+      }
+    } catch(e) {
+      console.error(e);
     }
     
     await this.refresh();
     await this.switchSubTab(this.activeTab);
+  },
+
+  setSuggestCategory(category) {
+    this.state.suggestCategory = category;
+    document.querySelectorAll('#suggest-category-bar button').forEach(btn => {
+      const isTarget = (category === '' && btn.innerText === 'All') || (category !== '' && btn.innerText.includes(category));
+      btn.className = isTarget ? 'btn btn-sm' : 'btn btn-outline btn-sm';
+    });
+  },
+
+  setCacheCategoryFilter(category) {
+    this.state.cacheCategory = category;
+    document.querySelectorAll('#cache-category-bar button').forEach(btn => {
+      const isTarget = (category === '' && btn.innerText.includes('All')) || (category !== '' && btn.innerText.includes(category));
+      btn.className = isTarget ? 'btn btn-sm' : 'btn btn-outline btn-sm';
+    });
+    this.filterAndSortCache();
+  },
+
+  async addFutureWeek() {
+    try {
+      this.state.plans = await api.plan.addWeek();
+      this.state.expandedWeekOf = this.state.plans[this.state.plans.length - 1].weekOf;
+      await this.refresh();
+      Toast.show('Added future week', 'success');
+    } catch(e) {
+      Toast.show('Failed to add week');
+    }
+  },
+
+  async removeWeek(event, weekOf) {
+    if (event) event.stopPropagation();
+    
+    ConfirmModal.show({
+      title: 'Remove Week Plan',
+      message: `Are you sure you want to remove the week plan for ${this.formatWeekRange(weekOf)}? Any planned meals for this week will be removed.`,
+      confirmText: 'Remove Week',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          this.state.plans = await api.plan.deleteWeek(weekOf);
+          if (this.state.expandedWeekOf === weekOf) {
+            this.state.expandedWeekOf = this.state.plans.length > 0 ? this.state.plans[0].weekOf : null;
+          }
+          await this.refresh();
+          Toast.show('Week plan removed', 'success');
+        } catch (e) {
+          Toast.show('Failed to remove week plan');
+        }
+      }
+    });
+  },
+
+  toggleWeek(weekOf) {
+    if (this.state.expandedWeekOf === weekOf) {
+      this.state.expandedWeekOf = null;
+    } else {
+      this.state.expandedWeekOf = weekOf;
+      const activePlan = this.state.plans.find(p => p.weekOf === weekOf);
+      if (activePlan && activePlan.pendingSuggestions) {
+        this.state.suggestions = activePlan.pendingSuggestions;
+      } else {
+        this.state.suggestions = [];
+      }
+      if (this.activeTab === 'suggestions') {
+        this.renderSuggestions();
+      }
+    }
+    this.refresh();
   },
 
   getDayDate(weekOfStr, dayIndex) {
@@ -128,85 +245,119 @@ const PlanView = {
 
   async refresh() {
     const content = document.getElementById('plan-content');
-    try {
-      const plan = await api.plan.current();
-      
-      const titleEl = document.getElementById('plan-header-title');
-      if (titleEl) {
-        titleEl.innerHTML = `<h2>Current Week (${this.formatWeekRange(plan.weekOf)})</h2>`;
-      }
+    
+    if (!this.state.plans || this.state.plans.length === 0) {
+      content.innerHTML = '<p>No active plans.</p>';
+      return;
+    }
 
+    let html = '<div class="plan-weeks-container" style="display: flex; flex-direction: column; gap: 1rem;">';
+    
+    this.state.plans.forEach(plan => {
+      const isExpanded = this.state.expandedWeekOf === plan.weekOf;
       const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      
       const dailyMeals = {};
       daysOfWeek.forEach(d => dailyMeals[d] = []);
       
+      let plannedDaysCount = 0;
       if (plan.meals && plan.meals.length > 0) {
         plan.meals.forEach(meal => {
           if (meal.assignedDays && meal.assignedDays.length > 0) {
             meal.assignedDays.forEach(day => {
-              if (dailyMeals[day]) {
-                dailyMeals[day].push(meal);
-              }
+              if (dailyMeals[day]) dailyMeals[day].push(meal);
             });
           }
         });
       }
-
-      let html = `<div class="calendar-list-view">`;
       
-      daysOfWeek.forEach((day, dayIndex) => {
-        const meals = dailyMeals[day];
-        const dateStr = this.getDayDate(plan.weekOf, dayIndex);
-        const dayShort = day.substring(0, 3).toUpperCase();
-        
-        html += `
-          <div class="calendar-list-row ${meals.length === 0 ? 'empty-row' : ''}">
-            <div class="day-list-info">
-              <span class="day-list-name">${dayShort}</span>
-              <span class="day-list-date">${dateStr}</span>
-              ${meals.length > 0 ? `<span class="day-list-badge">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>` : ''}
-            </div>
-            
-            <div class="day-list-meals">
-              ${meals.length > 0 ? meals.map(m => {
-                const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                return `
-                  <div class="day-meal-row-card">
-                    <span class="drag-handle" title="Drag handle">⋮⋮</span>
-                    <span style="font-size: 1.05rem;">🍳</span>
-                    <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" class="meal-row-title" title="Click to view recipe details">
-                      ${cleanTitle}
-                    </a>
-                    <span class="meal-row-servings">🍽️ ${m.servings} servings</span>
-                    <div class="meal-row-actions">
-                      <button onclick="PlanView.editMealDays('${m.recipeId}')" title="Reassign meal days" class="action-btn action-btn-edit">✏️ Edit Days</button>
-                      <button onclick="PlanView.removeMeal('${m.recipeId}')" title="Remove ${cleanTitle}" class="btn-remove-meal">🗑️ Remove</button>
-                    </div>
-                  </div>
-                `;
-              }).join('') : `
-                <div class="empty-list-target" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">
-                  <span class="empty-list-icon">➕</span>
-                  <span class="empty-list-text">No meals planned for ${day} — click to add</span>
-                </div>
-              `}
-            </div>
-
-            <div class="day-list-action">
-              <button class="btn-add-meal-row" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})" title="Add meal to ${day}">
-                + Add Meal
-              </button>
-            </div>
-          </div>
-        `;
+      daysOfWeek.forEach(d => {
+        if (dailyMeals[d].length > 0) plannedDaysCount++;
       });
       
-      html += `</div>`;
-      content.innerHTML = html;
-    } catch (e) {
-      content.innerHTML = `<p style="color: var(--danger);">Failed to load plan.</p>`;
-    }
+      html += `
+        <div class="week-card ${isExpanded ? 'expanded' : 'collapsed'}" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; transition: all 0.3s ease;">
+          <div class="week-header" onclick="PlanView.toggleWeek('${plan.weekOf}')" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${isExpanded ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)'};">
+             <div style="display: flex; align-items: center; gap: 1rem;">
+               <h3 style="margin: 0; font-size: 1.1rem;">Week of ${this.formatWeekRange(plan.weekOf)}</h3>
+               <span style="font-size: 0.85rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 1rem;">${plannedDaysCount}/7 Days Planned</span>
+             </div>
+             
+             <div class="week-summary" style="display: ${isExpanded ? 'none' : 'flex'}; gap: 0.5rem; flex: 1; justify-content: center; opacity: 0.8;">
+                 ${daysOfWeek.map(d => `<span title="${d}" style="width: 12px; height: 12px; border-radius: 50%; background: ${dailyMeals[d].length > 0 ? 'var(--primary)' : 'var(--border)'};"></span>`).join('')}
+             </div>
+             
+             <div style="display: flex; align-items: center; gap: 0.75rem;">
+               ${this.state.plans.length > 1 ? `
+                 <button onclick="PlanView.removeWeek(event, '${plan.weekOf}')" title="Delete this week plan" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; border-radius: 0.5rem; padding: 0.3rem 0.65rem; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'">🗑️ Remove Week</button>
+               ` : ''}
+               <div style="font-size: 0.9rem; color: var(--text-muted); transition: transform 0.2s; transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0)'};">
+                  ▼
+               </div>
+             </div>
+          </div>
+      `;
+
+      if (isExpanded) {
+        html += `<div class="week-body" style="padding: 1.5rem; border-top: 1px solid var(--border);">`;
+        html += `<div class="calendar-list-view">`;
+        
+        daysOfWeek.forEach((day, dayIndex) => {
+          const meals = dailyMeals[day];
+          const dateStr = this.getDayDate(plan.weekOf, dayIndex);
+          const dayShort = day.substring(0, 3).toUpperCase();
+          
+          html += `
+            <div class="calendar-list-row ${meals.length === 0 ? 'empty-row' : ''}">
+              <div class="day-list-info">
+                <span class="day-list-name">${dayShort}</span>
+                <span class="day-list-date">${dateStr}</span>
+                ${meals.length > 0 ? `<span class="day-list-badge">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>` : ''}
+              </div>
+              
+              <div class="day-list-meals">
+                ${meals.length > 0 ? meals.map(m => {
+                  const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                  const typeIcon = m.mealType === 'Breakfast' ? '🥞' : m.mealType === 'Lunch' ? '🥗' : m.mealType === 'Snack' ? '🥨' : m.mealType === 'Dessert' ? '🍰' : '🍽️';
+                  
+                  return `
+                    <div class="day-meal-row-card">
+                      <span class="drag-handle" title="Drag handle">⋮⋮</span>
+                      <span style="font-size: 1.05rem;" title="${m.mealType || 'Dinner'}">${typeIcon}</span>
+                      <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" class="meal-row-title" title="Click to view recipe details">
+                        ${cleanTitle}
+                      </a>
+                      <span class="meal-row-servings">🍽️ ${m.servings} servings</span>
+                      <div class="meal-row-actions">
+                        <button onclick="PlanView.editMealDays('${m.recipeId}', '${plan.weekOf}')" title="Reassign meal days" class="action-btn action-btn-edit">✏️ Edit</button>
+                        <button onclick="PlanView.removeMeal('${m.recipeId}', '${plan.weekOf}')" title="Remove ${cleanTitle}" class="btn-remove-meal">🗑️ Remove</button>
+                      </div>
+                    </div>
+                  `;
+                }).join('') : `
+                  <div class="empty-list-target" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">
+                    <span class="empty-list-icon">➕</span>
+                    <span class="empty-list-text">No meals planned for ${day} — click to add</span>
+                  </div>
+                `}
+              </div>
+
+              <div class="day-list-action">
+                <button class="btn-add-meal-row" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})" title="Add meal to ${day}">
+                  + Add Meal
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        
+        html += `</div></div>`; // end week-body
+      }
+      
+      html += `</div>`; // end week-card
+    });
+    
+    html += `</div>`;
+    content.innerHTML = html;
   },
 
   async switchSubTab(tab) {
@@ -309,11 +460,22 @@ const PlanView = {
     
     const searchVal = (document.getElementById('cache-search')?.value || '').toLowerCase();
     const sortVal = document.getElementById('cache-sort')?.value || 'recent';
+    const catVal = (this.state.cacheCategory || '').toLowerCase();
 
     let filtered = this.state.cachedRecipes.filter(recipe => {
       const titleMatch = recipe.title.toLowerCase().includes(searchVal);
       const tagMatch = (recipe.tags || []).some(t => t.toLowerCase().includes(searchVal));
-      return titleMatch || tagMatch;
+      const matchesSearch = !searchVal || titleMatch || tagMatch;
+
+      let matchesCat = true;
+      if (catVal) {
+        const inTags = (recipe.tags || []).some(t => t.toLowerCase().includes(catVal));
+        const inTitle = recipe.title.toLowerCase().includes(catVal);
+        const inMealType = recipe.mealType && recipe.mealType.toLowerCase() === catVal;
+        matchesCat = inTags || inTitle || inMealType;
+      }
+
+      return matchesSearch && matchesCat;
     });
 
     filtered.sort((a, b) => {
@@ -354,7 +516,7 @@ const PlanView = {
   renderCache(recipes) {
     const content = document.getElementById('cache-content');
     if (!recipes || recipes.length === 0) {
-      content.innerHTML = `<p style="color: var(--text-secondary);">No saved recipes found.</p>`;
+      content.innerHTML = `<p style="color: var(--text-secondary);">No saved recipes found for this filter.</p>`;
       return;
     }
 
@@ -379,7 +541,11 @@ const PlanView = {
     content.innerHTML = Loader.render('Generating customized meal suggestions...');
     
     try {
-      this.state.suggestions = await api.plan.suggest();
+      this.state.suggestions = await api.plan.suggest(this.state.expandedWeekOf, this.state.suggestCategory);
+      if (this.state.expandedWeekOf) {
+        const activePlan = this.state.plans.find(p => p.weekOf === this.state.expandedWeekOf);
+        if (activePlan) activePlan.pendingSuggestions = this.state.suggestions;
+      }
       this.renderSuggestions();
     } catch (e) {
       content.innerHTML = `<p style="color: var(--danger);">Failed to generate suggestions. Please check if your context is set up.</p>`;
@@ -413,25 +579,27 @@ const PlanView = {
   async decide(id, decision) {
     if (decision === 'yes') {
       this.activeRecipeId = id;
-      this.openDayModal();
+      this.openDayModal([], 'Dinner', this.state.expandedWeekOf);
     } else {
-      await this.submitDecision(id, decision, []);
+      await this.submitDecision(id, decision, [], null, this.state.expandedWeekOf);
     }
   },
 
-  async editMealDays(recipeId) {
+  async editMealDays(recipeId, weekOf) {
     this.activeRecipeId = recipeId;
     try {
-      const plan = await api.plan.current();
+      const plan = this.state.plans.find(p => p.weekOf === weekOf);
       const meal = (plan.meals || []).find(m => m.recipeId === recipeId);
       const assignedDays = meal ? (meal.assignedDays || []) : [];
-      await this.openDayModal(assignedDays);
+      const mealType = meal ? (meal.mealType || 'Dinner') : 'Dinner';
+      await this.openDayModal(assignedDays, mealType, weekOf);
     } catch(e) {
-      await this.openDayModal([]);
+      await this.openDayModal([], 'Dinner', weekOf);
     }
   },
 
-  async openDayModal(preselectedDays = []) {
+  async openDayModal(preselectedDays = [], mealType = 'Dinner', weekOf = null) {
+    this.activeModalWeekOf = weekOf;
     const modal = document.getElementById('day-modal');
     modal.classList.add('open');
     
@@ -439,13 +607,16 @@ const PlanView = {
       cb.checked = preselectedDays.includes(cb.value);
     });
 
+    const radioChecked = modal.querySelector(`input[name="mealType"][value="${mealType}"]`);
+    if (radioChecked) radioChecked.checked = true;
+
     try {
-      const plan = await api.plan.current();
+      const plan = this.state.plans.find(p => p.weekOf === weekOf) || this.state.plans[0];
       const dailyMeals = {};
       const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       daysOfWeek.forEach(d => dailyMeals[d] = []);
       
-      if (plan.meals) {
+      if (plan && plan.meals) {
         plan.meals.forEach(m => {
           if (m.assignedDays) {
             m.assignedDays.forEach(day => {
@@ -457,8 +628,9 @@ const PlanView = {
         });
       }
 
-      modal.querySelectorAll('.day-chip').forEach(chip => {
-        const cb = chip.querySelector('input');
+      modal.querySelectorAll('.day-chip:not(.type-chip)').forEach(chip => {
+        const cb = chip.querySelector('input[type="checkbox"]');
+        if (!cb) return;
         const dayVal = cb.value;
         const span = chip.querySelector('span');
         const abbreviation = dayVal.substring(0, 3);
@@ -477,11 +649,14 @@ const PlanView = {
     const modal = document.getElementById('day-modal');
     modal.classList.remove('open');
     this.activeRecipeId = null;
+    this.activeModalWeekOf = null;
   },
 
   async saveDaySelection() {
     const modal = document.getElementById('day-modal');
     const checked = Array.from(modal.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    const mealTypeChecked = modal.querySelector('input[name="mealType"]:checked');
+    const mealType = mealTypeChecked ? mealTypeChecked.value : 'Dinner';
     
     if (checked.length === 0) {
       Toast.show('Please select at least one day.', 'warning');
@@ -489,20 +664,30 @@ const PlanView = {
     }
 
     const recipeId = this.activeRecipeId;
+    const weekOf = this.activeModalWeekOf;
     this.closeDayModal();
     
-    await this.submitDecision(recipeId, 'yes', checked);
+    await this.submitDecision(recipeId, 'yes', checked, mealType, weekOf);
   },
 
-  async submitDecision(id, decision, assignedDays) {
+  async submitDecision(id, decision, assignedDays, mealType, weekOf) {
     const isSuggestionsTab = this.activeTab === 'suggestions';
     const card = isSuggestionsTab ? document.querySelector(`.recipe-card[data-id="${id}"]`) : null;
     if (card) card.style.opacity = '0.5';
     
     try {
-      await api.plan.decide([{ recipeId: id, decision, assignedDays }]);
+      if (!weekOf) weekOf = this.state.expandedWeekOf;
       
-      if (isSuggestionsTab) {
+      const plan = this.state.plans.find(p => p.weekOf === weekOf);
+      const isExistingMeal = plan && plan.meals.find(m => m.recipeId === id);
+      
+      if (isExistingMeal) {
+        await api.plan.updateMealDays(id, assignedDays, mealType, weekOf);
+      } else {
+        await api.plan.decide([{ recipeId: id, decision, assignedDays, mealType }], weekOf);
+      }
+      
+      if (isSuggestionsTab && !isExistingMeal) {
         if (card) card.remove();
         this.state.suggestions = this.state.suggestions.filter(s => s.id !== id);
         
@@ -511,19 +696,22 @@ const PlanView = {
           document.getElementById('discover-content').innerHTML = `<p>Ready to suggest more meals.</p>`;
         }
       } else {
-        Toast.show('Recipe added to plan!', 'success');
+        Toast.show('Plan updated!', 'success');
       }
       
+      this.state.plans = await api.plan.plans();
       await this.refresh();
     } catch (e) {
+      console.error(e);
       if (card) card.style.opacity = '1';
     }
   },
 
-  async removeMeal(recipeId) {
+  async removeMeal(recipeId, weekOf) {
     try {
-      await api.plan.removeMeal(recipeId);
+      await api.plan.removeMeal(recipeId, weekOf);
       Toast.show('Meal removed from plan.', 'success');
+      this.state.plans = await api.plan.plans();
       await this.refresh();
     } catch (e) {
       // Toast already shown

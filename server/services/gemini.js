@@ -63,9 +63,11 @@ const grocerySchema = {
 
 
 class GeminiService {
-  async generateSuggestions(context, history, cacheSummaries, neededMeals) {
+  async generateSuggestions(context, history, cacheSummaries, neededMeals, mealType = '') {
+    const mealTypeContext = mealType ? `\nFocus EXCLUSIVELY on suggestions for: ${mealType}.` : '';
+    
     const prompt = `
-You are an expert meal planner. The user needs ${neededMeals} meal suggestions for this week.
+You are an expert meal planner. The user needs ${neededMeals} meal suggestions for this week.${mealTypeContext}
 Here is the user's meal planning context/rule:
 ${context.rule}
 

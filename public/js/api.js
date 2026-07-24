@@ -21,13 +21,16 @@ const api = {
   },
   
   plan: {
-    current: () => api.request('/plan/current'),
+    current: (weekOf) => api.request(`/plan/current${weekOf ? `?weekOf=${weekOf}` : ''}`),
+    plans: () => api.request('/plan/plans'),
+    addWeek: () => api.request('/plan/plans', { method: 'POST' }),
+    deleteWeek: (weekOf) => api.request(`/plan/plans/${weekOf}`, { method: 'DELETE' }),
     history: () => api.request('/plan/history'),
-    suggest: () => api.request('/plan/suggest', { method: 'POST' }),
-    decide: (decisions) => api.request('/plan/decide', { method: 'POST', body: { decisions } }),
-    updateMealDays: (recipeId, assignedDays) => api.request(`/plan/meals/${recipeId}/days`, { method: 'PUT', body: { assignedDays } }),
+    suggest: (weekOf, mealType) => api.request(`/plan/suggest${weekOf ? `?weekOf=${weekOf}` : ''}`, { method: 'POST', body: { mealType } }),
+    decide: (decisions, weekOf) => api.request('/plan/decide', { method: 'POST', body: { decisions, weekOf } }),
+    updateMealDays: (recipeId, assignedDays, mealType, weekOf) => api.request(`/plan/meals/${recipeId}/days`, { method: 'PUT', body: { assignedDays, mealType, weekOf } }),
     rollover: () => api.request('/plan/rollover', { method: 'POST' }),
-    removeMeal: (recipeId) => api.request(`/plan/meals/${recipeId}`, { method: 'DELETE' })
+    removeMeal: (recipeId, weekOf) => api.request(`/plan/meals/${recipeId}${weekOf ? `?weekOf=${weekOf}` : ''}`, { method: 'DELETE' })
   },
 
   grocery: {
