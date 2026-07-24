@@ -217,7 +217,10 @@ router.get('/:id/view', async (req, res, next) => {
       </head>
       <body>
         <div class="container">
-          <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+            <button class="print-btn" style="margin: 0;" onclick="window.print()">🖨️ Print / Save PDF</button>
+            <button class="btn btn-outline" style="padding: 0.5rem 1rem; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); background: transparent; border-radius: 0.5rem; cursor: pointer;" onclick="if(confirm('Are you sure you want to delete this recipe? This will delete the markdown file and associated PDF.')) { fetch('/api/recipes/${recipe.id}', {method: 'DELETE'}).then(res => { if(res.ok) { alert('Recipe deleted. You can close this window.'); window.close(); } else alert('Failed to delete'); }) }">🗑️ Delete Recipe</button>
+          </div>
           <h1>${recipe.title}</h1>
           <div class="meta">
             <span>⏱️ Prep: ${recipe.prepTime || 0}m</span>

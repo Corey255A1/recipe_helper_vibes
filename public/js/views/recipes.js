@@ -216,7 +216,6 @@ const RecipesView = {
       const actions = `
         <div class="actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap; width: 100%; margin-top: 0;">
           <button class="btn" style="background: var(--success); flex: 1; padding: 0.55rem 0.75rem; font-size: 0.85rem;" onclick="RecipesView.addToPlan('${recipe.id}')">➕ Add to Plan</button>
-          <button class="btn btn-outline" style="padding: 0.55rem 0.75rem; font-size: 0.85rem; color: #f87171; border-color: rgba(239, 68, 68, 0.3);" onclick="RecipesView.deleteRecipe('${recipe.id}', '${recipe.title.replace(/'/g, "\\'")}')">🗑️</button>
         </div>
       `;
       grid.innerHTML += RecipeCard.render(recipe, actions, false);
@@ -245,6 +244,7 @@ const RecipesView = {
         try {
           await api.recipes.delete(id);
           Toast.show('Recipe deleted', 'success');
+          if (window.RecipeCard) RecipeCard.closeModal();
           await this.loadRecipes();
         } catch (e) {
           Toast.show('Failed to delete recipe');

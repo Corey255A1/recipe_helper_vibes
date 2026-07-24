@@ -68,7 +68,10 @@ const RecipeCard = {
       }
 
       content.innerHTML = `
-        <h2 style="margin-bottom: 0.5rem;">${recipe.title}</h2>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem;">
+          <h2 style="margin: 0;">${recipe.title}</h2>
+          <button class="btn btn-outline" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; color: #f87171; border-color: rgba(239, 68, 68, 0.3);" onclick="RecipesView.deleteRecipe('${recipe.id}', '${recipe.title.replace(/'/g, "\\'")}')" title="Delete Recipe">🗑️</button>
+        </div>
         <div class="recipe-meta" style="margin-bottom: 1rem;">
           <span>⏱️ Prep: ${recipe.prepTime || 0}m</span>
           <span>🔥 Cook: ${recipe.cookTime || 0}m</span>
