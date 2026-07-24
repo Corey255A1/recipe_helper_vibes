@@ -146,6 +146,13 @@ nav a.active .step-num {
   display: block;
 }
 
+#recipes-view.active {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }

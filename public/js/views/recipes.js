@@ -11,8 +11,8 @@ const RecipesView = {
     const isGrid = this.state.viewMode === 'grid';
     return `
       <div class="view" id="recipes-view">
-        <!-- Sticky Control Panel -->
-        <div style="position: sticky; top: 75px; z-index: 90; background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1rem 1.5rem; margin-bottom: 2rem; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+        <!-- Control Panel -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1rem 1.5rem; margin-bottom: 1rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
           <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
             
             <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; min-width: 320px; flex-wrap: wrap;">
@@ -43,7 +43,7 @@ const RecipesView = {
         </div>
 
         <!-- Recipe Content Grid -->
-        <div id="recipes-library-content">
+        <div id="recipes-library-content" style="flex: 1; overflow-y: auto; padding-right: 0.5rem; padding-bottom: 2rem;">
           ${Loader.render('Loading recipe library...')}
         </div>
 
