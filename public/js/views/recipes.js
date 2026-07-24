@@ -12,7 +12,7 @@ const RecipesView = {
     return `
       <div class="view" id="recipes-view">
         <!-- Control Panel -->
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1rem 1.5rem; margin-bottom: 1rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <div class="library-control-panel">
           <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
             
             <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; min-width: 320px; flex-wrap: wrap;">
