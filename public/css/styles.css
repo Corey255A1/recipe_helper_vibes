@@ -307,9 +307,12 @@ input:focus, textarea:focus, select:focus {
 }
 .tags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow: hidden;
   gap: 0.4rem;
   margin-bottom: 1.25rem;
+  max-height: 28px;
 }
 .tag {
   background: rgba(255, 255, 255, 0.08);
@@ -410,22 +413,34 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
 }
 
-/* Plan Calendar Grid */
+/* Plan Calendar Grid - Reactive & Scroll-Snap Enabled */
 .calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
   gap: 0.85rem;
+  padding-bottom: 0.75rem;
   margin-top: 1rem;
+  -webkit-overflow-scrolling: touch;
 }
 
-@media (min-width: 1200px) {
-  .calendar-grid {
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.75rem;
-  }
+/* Custom scrollbar for calendar strip */
+.calendar-grid::-webkit-scrollbar {
+  height: 6px;
+}
+.calendar-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+.calendar-grid::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
 }
 
 .calendar-day-card {
+  flex: 0 0 210px;
+  min-width: 210px;
+  scroll-snap-align: start;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 1.1rem;
@@ -438,6 +453,30 @@ input:focus, textarea:focus, select:focus {
 }
 .calendar-day-card:hover {
   border-color: rgba(99, 102, 241, 0.35);
+}
+
+@media (min-width: 1400px) {
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    overflow-x: visible;
+  }
+  .calendar-day-card {
+    flex: auto;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-grid {
+    display: flex;
+    flex-direction: column;
+    overflow-x: visible;
+  }
+  .calendar-day-card {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
 }
 
 /* Day Sub-Cards & High-Contrast Components */
@@ -501,18 +540,27 @@ input:focus, textarea:focus, select:focus {
   gap: 0.4rem;
   flex: 1;
 }
+.drag-handle,
+.day-meal-actions-top {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.day-meal-item:hover .drag-handle,
+.day-meal-item:hover .day-meal-actions-top {
+  opacity: 1;
+}
+@media (hover: none) {
+  .drag-handle,
+  .day-meal-actions-top {
+    opacity: 0.8;
+  }
+}
 .drag-handle {
   color: #64748b;
   cursor: grab;
   font-size: 1.05rem;
   line-height: 1.2;
   user-select: none;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-.day-meal-item:hover .drag-handle {
-  opacity: 1;
-  color: var(--text-secondary);
 }
 .day-meal-title {
   font-weight: 600;

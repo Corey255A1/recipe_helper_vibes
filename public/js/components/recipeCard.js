@@ -43,10 +43,7 @@ const RecipeCard = {
           <div class="tags" style="margin-bottom: 0.85rem;">${tagsHtml}</div>
         </div>
         
-        <div class="card-actions-wrapper" style="display: flex; gap: 0.5rem; align-items: center;">
-          <button class="btn btn-outline btn-details" style="flex: 1;" onclick="RecipeCard.openModal('${recipe.id}')">
-            📖 View Details
-          </button>
+        <div class="card-actions-wrapper" style="display: flex; gap: 0.5rem; align-items: center; margin-top: auto; padding-top: 0.5rem;">
           ${actionsHtml}
         </div>
       </div>

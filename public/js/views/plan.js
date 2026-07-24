@@ -407,9 +407,9 @@ const PlanView = {
     
     this.state.suggestions.forEach(recipe => {
       const actions = `
-        <div class="actions" style="display: flex; gap: 0.4rem; flex: 2; margin-top: 0;">
-          <button class="btn" style="background: var(--success); flex: 1.2; padding: 0.55rem 0.65rem; font-size: 0.85rem;" onclick="PlanView.decide('${recipe.id}', 'yes')">➕ Add to Plan</button>
-          <button class="btn btn-outline" style="flex: 0.8; padding: 0.55rem 0.65rem; font-size: 0.85rem;" onclick="PlanView.decide('${recipe.id}', 'not_this_time')">⏭️ Skip</button>
+        <div class="actions" style="display: flex; gap: 0.5rem; width: 100%; align-items: center; margin-top: 0;">
+          <button class="btn" style="background: var(--success); flex: 1; padding: 0.65rem 1rem; font-size: 0.9rem;" onclick="PlanView.decide('${recipe.id}', 'yes')">➕ Add to Plan</button>
+          <button onclick="PlanView.decide('${recipe.id}', 'not_this_time')" title="Skip for now" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.4rem 0.6rem; font-size: 0.825rem; font-weight: 500; border-radius: 0.4rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">Skip ⏭️</button>
         </div>
       `;
       grid.innerHTML += RecipeCard.render(recipe, actions, true);
