@@ -11,12 +11,15 @@
 </head>
 <body>
     <header>
-        <div class="container">
-            <div class="brand">
-                <span class="brand-icon">🍳</span>
-                <h1>Recipe Helper</h1>
+        <div class="container" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="brand">
+                    <span class="brand-icon">🍳</span>
+                    <h1>Recipe Helper</h1>
+                </div>
+                <button id="menu-toggle" class="btn btn-outline" style="padding: 0.4rem 0.6rem; font-size: 1.25rem;">☰</button>
             </div>
-            <nav>
+            <nav id="main-nav">
                 <a href="/" class="nav-link" data-route="recipes"><span class="step-num">1</span> Library</a>
                 <a href="#plan" class="nav-link" data-route="plan"><span class="step-num">2</span> Meal Plan</a>
                 <a href="#grocery" class="nav-link" data-route="grocery"><span class="step-num">3</span> Shop</a>

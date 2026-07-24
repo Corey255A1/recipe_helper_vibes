@@ -15,6 +15,15 @@ const App = {
     }
     
     // Set up navigation
+    const mainNav = document.getElementById('main-nav');
+    const menuToggle = document.getElementById('menu-toggle');
+    
+    if (menuToggle && mainNav) {
+      menuToggle.addEventListener('click', () => {
+        mainNav.classList.toggle('open');
+      });
+    }
+
     document.querySelectorAll('nav a').forEach(link => {
       link.addEventListener('click', (e) => {
         const route = e.currentTarget.dataset.route;
@@ -22,6 +31,11 @@ const App = {
           e.preventDefault();
           this.navigate(route);
           history.pushState({ route }, '', route === 'recipes' ? '/' : `#${route}`);
+          
+          // Close menu on mobile after selection
+          if (mainNav) {
+            mainNav.classList.remove('open');
+          }
         }
       });
     });
