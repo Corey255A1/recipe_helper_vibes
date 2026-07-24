@@ -17,11 +17,11 @@ const App = {
     // Set up navigation
     document.querySelectorAll('nav a').forEach(link => {
       link.addEventListener('click', (e) => {
-        const route = e.target.dataset.route;
+        const route = e.currentTarget.dataset.route;
         if (route) {
           e.preventDefault();
           this.navigate(route);
-          history.pushState({ route }, '', route === 'context' ? '/' : `#${route}`);
+          history.pushState({ route }, '', route === 'recipes' ? '/' : `#${route}`);
         }
       });
     });
@@ -34,7 +34,7 @@ const App = {
 
     // Determine initial route
     const hash = window.location.hash.replace('#', '');
-    this.navigate(this.views[hash] ? hash : 'context');
+    this.navigate(this.views[hash] ? hash : 'recipes');
   },
   
   async navigate(route) {
