@@ -170,11 +170,15 @@ body.route-recipes {
 
 @media (max-width: 768px) {
   #recipes-view.active {
-    height: calc(100dvh - 150px);
+    height: calc(100dvh - 130px);
+  }
+  body.route-recipes main.container {
+    padding: 2px;
   }
   .library-control-panel {
-    padding: 2px;
-    border-radius: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
   }
 }
 
