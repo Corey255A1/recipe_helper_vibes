@@ -60,6 +60,7 @@ const App = {
     // Show correct view
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(`${route}-view`).classList.add('active');
+    document.body.className = `route-${route}`;
     
     // Initialize view data
     if (this.views[route] && this.views[route].init) {

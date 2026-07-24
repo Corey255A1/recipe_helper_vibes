@@ -146,10 +146,15 @@ nav a.active .step-num {
   display: block;
 }
 
+body.route-recipes {
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
 #recipes-view.active {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px);
+  height: calc(100dvh - 110px);
   overflow: hidden;
 }
 
@@ -164,8 +169,11 @@ nav a.active .step-num {
 }
 
 @media (max-width: 768px) {
+  #recipes-view.active {
+    height: calc(100dvh - 150px);
+  }
   .library-control-panel {
-    padding: 0.75rem 0.75rem;
+    padding: 2px;
     border-radius: 1rem;
   }
 }
