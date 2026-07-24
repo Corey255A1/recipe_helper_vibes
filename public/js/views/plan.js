@@ -153,7 +153,7 @@ const PlanView = {
         });
       }
 
-      let html = `<div class="calendar-grid">`;
+      let html = `<div class="calendar-list-view">`;
       
       daysOfWeek.forEach((day, dayIndex) => {
         const meals = dailyMeals[day];
@@ -161,52 +161,43 @@ const PlanView = {
         const dayShort = day.substring(0, 3).toUpperCase();
         
         html += `
-          <div class="calendar-day-card">
-            <div class="calendar-day-header">
-              <div>
-                <span class="day-name">${dayShort}</span>
-                <span class="day-date">${dateStr}</span>
-              </div>
-              ${meals.length > 0 ? `<span class="day-meal-badge">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>` : ''}
+          <div class="calendar-list-row ${meals.length === 0 ? 'empty-row' : ''}">
+            <div class="day-list-info">
+              <span class="day-list-name">${dayShort}</span>
+              <span class="day-list-date">${dateStr}</span>
+              ${meals.length > 0 ? `<span class="day-list-badge">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>` : ''}
             </div>
             
-            <div style="display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1;">
+            <div class="day-list-meals">
               ${meals.length > 0 ? meals.map(m => {
                 const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                 return `
-                  <div class="day-meal-item">
-                    <div class="day-meal-top">
-                      <div class="day-meal-title-group" onclick="PlanView.viewRecipe('${m.recipeId}')" style="cursor: pointer;" title="Click to view recipe details">
-                        <span class="drag-handle" title="Drag handle">⋮⋮</span>
-                        <span class="day-meal-title">🍳 ${cleanTitle}</span>
-                      </div>
-                      <div style="display: flex; align-items: center; gap: 0.25rem;">
-                        <button onclick="PlanView.editMealDays('${m.recipeId}')" title="Reassign meal days" class="action-icon-btn edit-icon-btn">
-                          ✏️
-                        </button>
-                        <button onclick="PlanView.removeMeal('${m.recipeId}')" title="Remove ${cleanTitle}" class="action-icon-btn remove-icon-btn">
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                    <div class="day-meal-meta" onclick="PlanView.viewRecipe('${m.recipeId}')" style="cursor: pointer;" title="Click to view recipe details">
-                      <span class="meta-servings">🍽️ ${m.servings} servings</span>
+                  <div class="day-meal-row-card">
+                    <span class="drag-handle" title="Drag handle">⋮⋮</span>
+                    <span style="font-size: 1.05rem;">🍳</span>
+                    <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" class="meal-row-title" title="Click to view recipe details">
+                      ${cleanTitle}
+                    </a>
+                    <span class="meal-row-servings">🍽️ ${m.servings} servings</span>
+                    <div class="meal-row-actions">
+                      <button onclick="PlanView.editMealDays('${m.recipeId}')" title="Reassign meal days" class="action-btn action-btn-edit">✏️ Edit Days</button>
+                      <button onclick="PlanView.removeMeal('${m.recipeId}')" title="Remove ${cleanTitle}" class="btn-remove-meal">🗑️ Remove</button>
                     </div>
                   </div>
                 `;
               }).join('') : `
-                <div class="empty-day-target" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">
-                  <div class="empty-day-icon">➕</div>
-                  <div class="empty-day-text">Add Meal</div>
+                <div class="empty-list-target" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">
+                  <span class="empty-list-icon">➕</span>
+                  <span class="empty-list-text">No meals planned for ${day} — click to add</span>
                 </div>
               `}
             </div>
 
-            ${meals.length > 0 ? `
-              <div style="margin-top: 0.85rem;">
-                <button class="btn-add-meal-day" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">+ Add Meal</button>
-              </div>
-            ` : ''}
+            <div class="day-list-action">
+              <button class="btn-add-meal-row" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})" title="Add meal to ${day}">
+                + Add Meal
+              </button>
+            </div>
           </div>
         `;
       });
