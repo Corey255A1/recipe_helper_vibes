@@ -23,17 +23,6 @@ const GroceryView = {
     await this.renderPlanSummary();
   },
 
-  getDayDate(weekOfStr, dayIndex) {
-    if (!weekOfStr) return '';
-    try {
-      const startDate = new Date(weekOfStr + 'T00:00:00');
-      const dayDate = new Date(startDate.getTime() + dayIndex * 24 * 60 * 60 * 1000);
-      return dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch(e) {
-      return '';
-    }
-  },
-
   async renderPlanSummary() {
     const summaryEl = document.getElementById('grocery-plan-summary');
     try {
@@ -66,7 +55,7 @@ const GroceryView = {
       daysOfWeek.forEach((day, dayIndex) => {
         const meals = dailyMeals[day];
         const dayShort = day.substring(0, 3).toUpperCase();
-        const dateStr = this.getDayDate(plan.weekOf, dayIndex);
+        const dateStr = Utils.getDayDate(plan.weekOf, dayIndex);
         html += `
           <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.75rem; border-radius: 0.65rem;">
             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem;">

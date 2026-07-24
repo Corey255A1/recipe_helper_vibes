@@ -2,7 +2,8 @@ const App = {
   views: {
     context: ContextView,
     plan: PlanView,
-    grocery: GroceryView
+    grocery: GroceryView,
+    recipes: RecipesView
   },
   
   async init() {

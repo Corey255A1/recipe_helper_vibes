@@ -40,6 +40,7 @@ const api = {
   recipes: {
     list: () => api.request('/recipes'),
     get: (id) => api.request(`/recipes/${id}`),
+    delete: (id) => api.request(`/recipes/${id}`, { method: 'DELETE' }),
     importLink: (url) => api.request('/recipes/import-link', { method: 'POST', body: { url } }),
     importPdf: (formData) => fetch('/api/recipes/import-pdf', {
       method: 'POST',
@@ -51,6 +52,18 @@ const api = {
     }).catch(err => {
       Toast.show(err.message);
       throw err;
-    })
+    }),
+    batchImportPdf: (formData) => fetch('/api/recipes/batch-import-pdf', {
+      method: 'POST',
+      body: formData
+    }).then(async r => {
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error?.message || data.error || 'Batch upload failed');
+      return data;
+    }).catch(err => {
+      Toast.show(err.message);
+      throw err;
+    }),
+    batchImportFolder: (folderPath) => api.request('/recipes/batch-import-folder', { method: 'POST', body: { folderPath } })
   }
 };

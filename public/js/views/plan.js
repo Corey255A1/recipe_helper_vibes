@@ -232,17 +232,6 @@ const PlanView = {
     this.refresh();
   },
 
-  getDayDate(weekOfStr, dayIndex) {
-    if (!weekOfStr) return '';
-    try {
-      const startDate = new Date(weekOfStr + 'T00:00:00');
-      const dayDate = new Date(startDate.getTime() + dayIndex * 24 * 60 * 60 * 1000);
-      return dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch(e) {
-      return '';
-    }
-  },
-
   async refresh() {
     const content = document.getElementById('plan-content');
     
@@ -303,7 +292,7 @@ const PlanView = {
         
         daysOfWeek.forEach((day, dayIndex) => {
           const meals = dailyMeals[day];
-          const dateStr = this.getDayDate(plan.weekOf, dayIndex);
+          const dateStr = Utils.getDayDate(plan.weekOf, dayIndex);
           const dayShort = day.substring(0, 3).toUpperCase();
           
           html += `
@@ -478,33 +467,14 @@ const PlanView = {
       return matchesSearch && matchesCat;
     });
 
-    filtered.sort((a, b) => {
-      if (sortVal === 'recent') {
-        return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
-      } else if (sortVal === 'oldest') {
-        return new Date(a.addedAt || 0) - new Date(b.addedAt || 0);
-      } else if (sortVal === 'title') {
-        return a.title.localeCompare(b.title);
-      }
-      return 0;
-    });
+    Utils.sortRecipes(filtered, sortVal);
 
     this.renderCache(filtered);
   },
 
   setViewMode(mode) {
     this.state.viewMode = mode;
-    const btnGrid = document.getElementById('view-mode-grid');
-    const btnList = document.getElementById('view-mode-list');
-    if (btnGrid && btnList) {
-      if (mode === 'grid') {
-        btnGrid.className = 'btn';
-        btnList.className = 'btn btn-outline';
-      } else {
-        btnGrid.className = 'btn btn-outline';
-        btnList.className = 'btn';
-      }
-    }
+    Utils.updateViewModeButtons(mode, 'view-mode-grid', 'view-mode-list');
     
     if (this.activeTab === 'suggestions') {
       this.renderSuggestions();

@@ -92,6 +92,12 @@ async function getTargetWeek(weekOf) {
   return plans[0];
 }
 
+async function getPlansAndTargetWeek(weekOf) {
+  const plans = await getPlans();
+  const targetWeek = weekOf ? plans.find(p => p.weekOf === weekOf) : plans[0];
+  return { plans, targetWeek };
+}
+
 router.get('/plans', async (req, res, next) => {
   try {
     res.json(await getPlans());
@@ -162,8 +168,7 @@ router.post('/suggest', async (req, res, next) => {
       return res.status(400).json({ error: "Context not set. Please set context first." });
     }
 
-    const plans = await getPlans();
-    const targetWeek = req.query.weekOf ? plans.find(p => p.weekOf === req.query.weekOf) : plans[0];
+    const { plans, targetWeek } = await getPlansAndTargetWeek(req.query.weekOf);
     if (!targetWeek) return res.status(404).json({ error: "Week not found." });
 
     const neededMeals = context.mealsPerWeek - targetWeek.meals.length;
@@ -191,8 +196,7 @@ router.post('/suggest', async (req, res, next) => {
 router.post('/decide', async (req, res, next) => {
   try {
     const { decisions, weekOf } = req.body;
-    const plans = await getPlans();
-    const targetWeek = weekOf ? plans.find(p => p.weekOf === weekOf) : plans[0];
+    const { plans, targetWeek } = await getPlansAndTargetWeek(weekOf);
     if (!targetWeek) return res.status(404).json({ error: "Week not found." });
     
     for (const d of decisions) {
@@ -235,8 +239,7 @@ router.post('/decide', async (req, res, next) => {
 router.put('/meals/:recipeId/days', async (req, res, next) => {
   try {
     const { assignedDays, mealType, weekOf } = req.body;
-    const plans = await getPlans();
-    const targetWeek = weekOf ? plans.find(p => p.weekOf === weekOf) : plans[0];
+    const { plans, targetWeek } = await getPlansAndTargetWeek(weekOf);
     if (!targetWeek) return res.status(404).json({ error: "Week not found." });
 
     const meal = targetWeek.meals.find(m => m.recipeId === req.params.recipeId);
@@ -257,8 +260,7 @@ router.put('/meals/:recipeId/days', async (req, res, next) => {
 router.delete('/meals/:recipeId', async (req, res, next) => {
   try {
     const weekOf = req.query.weekOf;
-    const plans = await getPlans();
-    const targetWeek = weekOf ? plans.find(p => p.weekOf === weekOf) : plans[0];
+    const { plans, targetWeek } = await getPlansAndTargetWeek(weekOf);
     if (!targetWeek) return res.status(404).json({ error: "Week not found." });
 
     targetWeek.meals = targetWeek.meals.filter(m => m.recipeId !== req.params.recipeId);

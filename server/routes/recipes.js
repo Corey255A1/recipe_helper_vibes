@@ -11,6 +11,18 @@ const pdfParse = require('pdf-parse');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+async function processAndSavePdfRecipe(buffer, originalname) {
+  const recipe = await gemini.extractRecipeFromPdf(buffer, originalname);
+  recipe.id = slugify(recipe.title);
+  recipe.pdfPath = `/api/recipes/${recipe.id}/pdf`;
+
+  const pdfDest = path.join(config.dataPaths.recipesDir, `${recipe.id}.pdf`);
+  await fs.mkdir(config.dataPaths.recipesDir, { recursive: true });
+  await fs.writeFile(pdfDest, buffer);
+
+  return await recipeCache.save(recipe);
+}
+
 router.get('/', async (req, res, next) => {
   try {
     const summaries = await recipeCache.list();
@@ -65,19 +77,71 @@ router.post('/import-pdf', upload.single('pdf'), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'PDF file is required' });
 
-    const recipe = await gemini.extractRecipeFromPdf(req.file.buffer, req.file.originalname);
-    
-    // Generate id
-    recipe.id = slugify(recipe.title);
-    recipe.pdfPath = `/api/recipes/${recipe.id}/pdf`;
-
-    // Save PDF next to markdown
-    const pdfDest = path.join(config.dataPaths.recipesDir, `${recipe.id}.pdf`);
-    await fs.mkdir(config.dataPaths.recipesDir, { recursive: true });
-    await fs.writeFile(pdfDest, req.file.buffer);
-
-    const saved = await recipeCache.save(recipe);
+    const saved = await processAndSavePdfRecipe(req.file.buffer, req.file.originalname);
     res.json(saved);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/batch-import-pdf', upload.array('pdfs', 20), async (req, res, next) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No PDF files provided' });
+    }
+
+    const processed = [];
+    const errors = [];
+
+    for (const file of req.files) {
+      try {
+        const saved = await processAndSavePdfRecipe(file.buffer, file.originalname);
+        processed.push(saved);
+      } catch (err) {
+        errors.push({ file: file.originalname, error: err.message });
+      }
+    }
+
+    res.json({ processed, errors });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/batch-import-folder', async (req, res, next) => {
+  try {
+    const { folderPath } = req.body;
+    const targetDir = folderPath || path.join(config.dataPaths.dataDir, 'unparsed');
+    
+    try {
+      await fs.access(targetDir);
+    } catch (e) {
+      return res.status(404).json({ error: `Folder not found: ${targetDir}` });
+    }
+
+    const files = await fs.readdir(targetDir);
+    const pdfFiles = files.filter(f => f.toLowerCase().endsWith('.pdf'));
+
+    if (pdfFiles.length === 0) {
+      return res.json({ message: 'No PDF files found in specified directory.', processed: [], errors: [] });
+    }
+
+    const processed = [];
+    const errors = [];
+
+    for (const fileName of pdfFiles) {
+      try {
+        const filePath = path.join(targetDir, fileName);
+        const buffer = await fs.readFile(filePath);
+        
+        const saved = await processAndSavePdfRecipe(buffer, fileName);
+        processed.push(saved);
+      } catch (err) {
+        errors.push({ file: fileName, error: err.message });
+      }
+    }
+
+    res.json({ processed, errors });
   } catch (error) {
     next(error);
   }
