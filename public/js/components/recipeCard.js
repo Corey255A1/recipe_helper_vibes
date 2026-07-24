@@ -29,21 +29,23 @@ const RecipeCard = {
 
     return `
       <div class="recipe-card" data-id="${recipe.id}">
-        <div class="card-header-row">
-          <div class="recipe-source-meta">${sourceBadgeHtml}</div>
+        
+        <!-- Row 1: Title -->
+        <div class="card-title-row" onclick="RecipeCard.openModal('${recipe.id}')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; width: 100%;">
+          <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0; color: #f8fafc; flex: 1; text-align: left; line-height: 1.3;">${recipe.title}</h3>
           ${neverBtnHtml}
         </div>
         
-        <div class="card-main-info" onclick="RecipeCard.openModal('${recipe.id}')" style="cursor: pointer;" title="Click to view details">
-          <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0.4rem; color: #f8fafc;">${recipe.title}</h3>
-          <div class="recipe-meta" style="margin-bottom: 0.75rem;">
-            <span>⏱️ ${recipe.totalTime || (recipe.prepTime + recipe.cookTime) || 20}m</span>
-            <span>🍽️ ${recipe.servings || 4} servings</span>
-          </div>
-          <div class="tags" style="margin-bottom: 0.85rem;">${tagsHtml}</div>
+        <!-- Row 2: Meta Pills -->
+        <div class="card-meta-row" onclick="RecipeCard.openModal('${recipe.id}')" style="cursor: pointer; display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; margin-bottom: 0.85rem; align-items: center; width: 100%;">
+          ${sourceBadgeHtml}
+          <span style="background: rgba(255, 255, 255, 0.05); padding: 0.2rem 0.5rem; border-radius: 0.4rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary); white-space: nowrap;">⏱️ ${recipe.totalTime || (recipe.prepTime + recipe.cookTime) || 20}m</span>
+          <span style="background: rgba(255, 255, 255, 0.05); padding: 0.2rem 0.5rem; border-radius: 0.4rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary); white-space: nowrap;">🍽️ ${recipe.servings || 4} servings</span>
+          ${tagsHtml}
         </div>
         
-        <div class="card-actions-wrapper" style="display: flex; gap: 0.5rem; align-items: center; margin-top: auto; padding-top: 0.5rem;">
+        <!-- Row 3: Actions -->
+        <div class="card-actions-wrapper" style="margin-top: auto; width: 100%;">
           ${actionsHtml}
         </div>
       </div>
