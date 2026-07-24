@@ -61,8 +61,13 @@ const PlanView = {
           </div>
 
           <div id="discover-cached-pane" class="tab-pane" style="display: none;">
-            <div style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem;">
-              <input type="text" id="cache-search" placeholder="Search saved recipes..." oninput="PlanView.searchCache(this.value)" style="margin-bottom: 0;">
+            <div style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <input type="text" id="cache-search" placeholder="Search saved recipes..." oninput="PlanView.filterAndSortCache()" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+              <select id="cache-sort" onchange="PlanView.filterAndSortCache()" style="margin-bottom: 0; padding: 0.5rem 1rem; border-radius: 0.5rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 0.875rem;">
+                <option value="recent" selected>Sort by: Date Added (Newest First)</option>
+                <option value="oldest">Sort by: Date Added (Oldest First)</option>
+                <option value="title">Sort by: Title (A - Z)</option>
+              </select>
             </div>
             <div id="cache-content">
               ${Loader.render('Loading recipe library...')}
@@ -110,6 +115,17 @@ const PlanView = {
     await this.switchSubTab(this.activeTab);
   },
 
+  getDayDate(weekOfStr, dayIndex) {
+    if (!weekOfStr) return '';
+    try {
+      const startDate = new Date(weekOfStr + 'T00:00:00');
+      const dayDate = new Date(startDate.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+      return dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch(e) {
+      return '';
+    }
+  },
+
   async refresh() {
     const content = document.getElementById('plan-content');
     try {
@@ -139,44 +155,59 @@ const PlanView = {
 
       let html = `<div class="calendar-grid">`;
       
-      daysOfWeek.forEach(day => {
+      daysOfWeek.forEach((day, dayIndex) => {
         const meals = dailyMeals[day];
+        const dateStr = this.getDayDate(plan.weekOf, dayIndex);
+        const dayShort = day.substring(0, 3).toUpperCase();
+        
         html += `
           <div class="calendar-day-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.4rem;">
-              <span class="day-title" style="font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px;">${day.toUpperCase()}</span>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>
+            <div class="calendar-day-header">
+              <div>
+                <span class="day-name">${dayShort}</span>
+                <span class="day-date">${dateStr}</span>
+              </div>
+              <span class="day-meal-badge">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>
             </div>
             
-            <div style="display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1;">
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1;">
               ${meals.length > 0 ? meals.map(m => {
                 const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                 return `
-                  <div class="day-meal-item" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.6rem; padding: 0.65rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.35rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
-                      <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" style="font-weight: 600; font-size: 0.85rem; color: var(--text); text-decoration: none; line-height: 1.3;">
-                        🍳 ${cleanTitle}
-                      </a>
-                      <button onclick="PlanView.removeMeal('${m.recipeId}')" title="Remove ${cleanTitle}" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; cursor: pointer; padding: 0.15rem 0.4rem; font-size: 0.75rem; border-radius: 0.35rem; line-height: 1; flex-shrink: 0;">
-                        ✕
+                  <div class="day-meal-item">
+                    <div class="day-meal-top">
+                      <div class="day-meal-title-group">
+                        <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+                        <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" class="day-meal-title">
+                          ${cleanTitle}
+                        </a>
+                      </div>
+                      <button onclick="PlanView.removeMeal('${m.recipeId}')" title="Remove ${cleanTitle}" class="btn-remove-meal">
+                        🗑️
                       </button>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;">
-                      <span>🍽️ ${m.servings} servings</span>
-                      <button onclick="PlanView.viewRecipe('${m.recipeId}')" style="background: none; border: none; color: var(--primary); font-size: 0.75rem; cursor: pointer; padding: 0;">Details →</button>
+                    <div class="day-meal-meta">
+                      <span class="meta-servings">🍽️ ${m.servings} servings</span>
+                      <div class="action-btn-group">
+                        <button onclick="PlanView.editMealDays('${m.recipeId}')" class="action-btn action-btn-edit">📅 Edit</button>
+                        <button onclick="PlanView.viewRecipe('${m.recipeId}')" class="action-btn action-btn-details">📖 Details →</button>
+                      </div>
                     </div>
                   </div>
                 `;
               }).join('') : `
-                <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.08); border-radius: 0.6rem; padding: 1.25rem 0.5rem; text-align: center;">
-                  <p style="color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-bottom: 0;">No meals planned</p>
+                <div class="empty-day-target" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">
+                  <div class="empty-day-icon">➕</div>
+                  <div class="empty-day-text">Add Meal</div>
                 </div>
               `}
             </div>
 
-            <div style="margin-top: 0.75rem;">
-              <button class="btn btn-outline" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.75rem; border-radius: 0.5rem;" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">+ Add Meal</button>
-            </div>
+            ${meals.length > 0 ? `
+              <div style="margin-top: 0.85rem;">
+                <button class="btn-add-meal-day" onclick="document.getElementById('discover-section').scrollIntoView({behavior: 'smooth'})">+ Add Meal</button>
+              </div>
+            ` : ''}
           </div>
         `;
       });
@@ -277,20 +308,35 @@ const PlanView = {
     const content = document.getElementById('cache-content');
     try {
       this.state.cachedRecipes = await api.recipes.list();
-      this.renderCache(this.state.cachedRecipes);
+      this.filterAndSortCache();
     } catch (e) {
       content.innerHTML = `<p style="color: var(--danger);">Failed to load cached recipes.</p>`;
     }
   },
 
-  searchCache(query) {
+  filterAndSortCache() {
     if (!this.state.cachedRecipes) return;
-    const filtered = this.state.cachedRecipes.filter(recipe => {
-      const q = query.toLowerCase();
-      const titleMatch = recipe.title.toLowerCase().includes(q);
-      const tagMatch = (recipe.tags || []).some(t => t.toLowerCase().includes(q));
+    
+    const searchVal = (document.getElementById('cache-search')?.value || '').toLowerCase();
+    const sortVal = document.getElementById('cache-sort')?.value || 'recent';
+
+    let filtered = this.state.cachedRecipes.filter(recipe => {
+      const titleMatch = recipe.title.toLowerCase().includes(searchVal);
+      const tagMatch = (recipe.tags || []).some(t => t.toLowerCase().includes(searchVal));
       return titleMatch || tagMatch;
     });
+
+    filtered.sort((a, b) => {
+      if (sortVal === 'recent') {
+        return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
+      } else if (sortVal === 'oldest') {
+        return new Date(a.addedAt || 0) - new Date(b.addedAt || 0);
+      } else if (sortVal === 'title') {
+        return a.title.localeCompare(b.title);
+      }
+      return 0;
+    });
+
     this.renderCache(filtered);
   },
 
@@ -311,8 +357,7 @@ const PlanView = {
     if (this.activeTab === 'suggestions') {
       this.renderSuggestions();
     } else if (this.activeTab === 'cached' && this.state.cachedRecipes) {
-      const searchVal = document.getElementById('cache-search')?.value || '';
-      this.searchCache(searchVal);
+      this.filterAndSortCache();
     }
   },
 
@@ -385,10 +430,25 @@ const PlanView = {
     }
   },
 
-  async openDayModal() {
+  async editMealDays(recipeId) {
+    this.activeRecipeId = recipeId;
+    try {
+      const plan = await api.plan.current();
+      const meal = (plan.meals || []).find(m => m.recipeId === recipeId);
+      const assignedDays = meal ? (meal.assignedDays || []) : [];
+      await this.openDayModal(assignedDays);
+    } catch(e) {
+      await this.openDayModal([]);
+    }
+  },
+
+  async openDayModal(preselectedDays = []) {
     const modal = document.getElementById('day-modal');
     modal.classList.add('open');
-    modal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    
+    modal.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.checked = preselectedDays.includes(cb.value);
+    });
 
     try {
       const plan = await api.plan.current();
@@ -503,7 +563,7 @@ const PlanView = {
       const recipe = await api.recipes.importLink(url);
       Toast.show(`Imported: ${recipe.title}`, 'success');
       urlInput.value = '';
-      await this.refresh();
+      await this.switchSubTab('cached');
     } catch (err) {
     } finally {
       submitBtn.textContent = originalText;
@@ -529,7 +589,7 @@ const PlanView = {
       const recipe = await api.recipes.importPdf(formData);
       Toast.show(`Uploaded & Parsed: ${recipe.title}`, 'success');
       fileInput.value = '';
-      await this.refresh();
+      await this.switchSubTab('cached');
     } catch (err) {
     } finally {
       submitBtn.textContent = originalText;

@@ -12,8 +12,16 @@ class RecipeCache {
       const mdFiles = files.filter(f => f.endsWith('.md'));
       
       const summaries = await Promise.all(mdFiles.map(async (file) => {
-        const content = await fs.readFile(path.join(config.dataPaths.recipesDir, file), 'utf-8');
-        return markdownToRecipe(content);
+        const filePath = path.join(config.dataPaths.recipesDir, file);
+        const [content, stat] = await Promise.all([
+          fs.readFile(filePath, 'utf-8'),
+          fs.stat(filePath)
+        ]);
+        const recipe = markdownToRecipe(content);
+        if (!recipe.addedAt) {
+          recipe.addedAt = stat.mtime.toISOString();
+        }
+        return recipe;
       }));
       return summaries;
     } catch (error) {

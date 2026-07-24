@@ -23,12 +23,23 @@ const GroceryView = {
     await this.renderPlanSummary();
   },
 
+  getDayDate(weekOfStr, dayIndex) {
+    if (!weekOfStr) return '';
+    try {
+      const startDate = new Date(weekOfStr + 'T00:00:00');
+      const dayDate = new Date(startDate.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+      return dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch(e) {
+      return '';
+    }
+  },
+
   async renderPlanSummary() {
     const summaryEl = document.getElementById('grocery-plan-summary');
     try {
       const plan = await api.plan.current();
       if (!plan.meals || plan.meals.length === 0) {
-        summaryEl.innerHTML = `<p style="color: var(--text-muted);">Your current plan is empty.</p>`;
+        summaryEl.innerHTML = `<p style="color: var(--text-secondary);">Your current plan is empty.</p>`;
         return;
       }
 
@@ -52,26 +63,36 @@ const GroceryView = {
       html += `<h3 style="font-size: 1.1rem; margin-bottom: 1rem; font-weight: 600;">📅 Current Weekly Schedule</h3>`;
       html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem;">`;
 
-      daysOfWeek.forEach(day => {
+      daysOfWeek.forEach((day, dayIndex) => {
         const meals = dailyMeals[day];
-        const dayShort = day.substring(0, 3);
+        const dayShort = day.substring(0, 3).toUpperCase();
+        const dateStr = this.getDayDate(plan.weekOf, dayIndex);
         html += `
-          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 0.75rem; border-radius: 0.6rem;">
-            <div style="font-weight: 600; font-size: 0.8rem; color: var(--primary); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.5px;">${dayShort}</div>
-            ${meals.length > 0 ? meals.map(m => `
-              <div style="font-size: 0.8rem; color: var(--text); font-weight: 500; margin-bottom: 0.25rem; line-height: 1.3;">
-                ${m.recipeId.replace(/-/g, ' ')}
-              </div>
-            `).join('') : `<div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">No meal</div>`}
+          <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.75rem; border-radius: 0.65rem;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem;">
+              <span style="font-weight: 700; font-size: 0.8rem; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.5px;">${dayShort}</span>
+              <span style="font-size: 0.725rem; color: var(--text-secondary); font-weight: 600;">${dateStr}</span>
+            </div>
+            ${meals.length > 0 ? meals.map(m => {
+              const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+              return `
+                <div style="font-size: 0.8rem; color: #f8fafc; font-weight: 500; margin-bottom: 0.25rem; line-height: 1.3;">
+                  🍳 ${cleanTitle}
+                </div>
+              `;
+            }).join('') : `<div style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">No meal</div>`}
           </div>
         `;
       });
 
       if (unassigned.length > 0) {
         html += `
-          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 0.75rem; border-radius: 0.6rem;">
-            <div style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">Unassigned</div>
-            ${unassigned.map(m => `<div style="font-size: 0.8rem; color: var(--text); font-weight: 500; margin-bottom: 0.25rem;">${m.recipeId.replace(/-/g, ' ')}</div>`).join('')}
+          <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.75rem; border-radius: 0.65rem;">
+            <div style="font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem; text-transform: uppercase;">Unassigned</div>
+            ${unassigned.map(m => {
+              const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+              return `<div style="font-size: 0.8rem; color: #f8fafc; font-weight: 500; margin-bottom: 0.25rem;">🍳 ${cleanTitle}</div>`;
+            }).join('')}
           </div>
         `;
       }

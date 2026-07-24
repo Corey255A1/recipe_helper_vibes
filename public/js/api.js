@@ -25,6 +25,7 @@ const api = {
     history: () => api.request('/plan/history'),
     suggest: () => api.request('/plan/suggest', { method: 'POST' }),
     decide: (decisions) => api.request('/plan/decide', { method: 'POST', body: { decisions } }),
+    updateMealDays: (recipeId, assignedDays) => api.request(`/plan/meals/${recipeId}/days`, { method: 'PUT', body: { assignedDays } }),
     rollover: () => api.request('/plan/rollover', { method: 'POST' }),
     removeMeal: (recipeId) => api.request(`/plan/meals/${recipeId}`, { method: 'DELETE' })
   },

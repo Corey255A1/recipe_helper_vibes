@@ -109,7 +109,10 @@ router.post('/decide', async (req, res, next) => {
         await recipeCache.save(suggestion);
       }
 
-      if (d.decision === 'yes') {
+      const existingMeal = currentWeek.meals.find(m => m.recipeId === (suggestion ? suggestion.id : d.recipeId));
+      if (existingMeal) {
+        existingMeal.assignedDays = d.assignedDays || [];
+      } else if (d.decision === 'yes' && suggestion) {
         currentWeek.meals.push({
           recipeId: suggestion.id,
           assignedDays: d.assignedDays || [],
@@ -122,6 +125,22 @@ router.post('/decide', async (req, res, next) => {
     const decidedIds = decisions.map(d => d.recipeId);
     currentWeek.pendingSuggestions = currentWeek.pendingSuggestions.filter(s => !decidedIds.includes(s.id));
     
+    await saveCurrentWeek(currentWeek);
+    res.json(currentWeek);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/meals/:recipeId/days', async (req, res, next) => {
+  try {
+    const { assignedDays } = req.body;
+    const currentWeek = await getCurrentWeek();
+    const meal = currentWeek.meals.find(m => m.recipeId === req.params.recipeId);
+    if (!meal) {
+      return res.status(404).json({ error: 'Meal not found in current plan' });
+    }
+    meal.assignedDays = assignedDays || [];
     await saveCurrentWeek(currentWeek);
     res.json(currentWeek);
   } catch (error) {
