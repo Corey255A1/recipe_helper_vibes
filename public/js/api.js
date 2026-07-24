@@ -34,7 +34,7 @@ const api = {
   },
 
   grocery: {
-    get: () => api.request('/grocery')
+    get: (weeks) => api.request(`/grocery${weeks && weeks.length > 0 ? `?weeks=${weeks.join(',')}` : ''}`)
   },
 
   recipes: {

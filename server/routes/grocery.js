@@ -7,14 +7,28 @@ const recipeCache = require('../services/recipeCache');
 
 router.get('/', async (req, res, next) => {
   try {
-    const currentWeekData = await fs.readFile(config.dataPaths.currentWeek, 'utf-8');
-    const currentWeek = JSON.parse(currentWeekData);
+    const plansData = await fs.readFile(config.dataPaths.plans, 'utf-8');
+    const plans = JSON.parse(plansData);
+
+    let selectedPlans = [];
+    if (req.query.weeks) {
+      const weeks = req.query.weeks.split(',');
+      selectedPlans = plans.filter(p => weeks.includes(p.weekOf));
+    } else {
+      selectedPlans = [plans[0]];
+    }
+
+    if (selectedPlans.length === 0) {
+      return res.json({ categories: [], copyText: '' });
+    }
 
     const recipes = [];
-    for (const meal of currentWeek.meals) {
-      const recipe = await recipeCache.get(meal.recipeId);
-      if (recipe) {
-        recipes.push(recipe);
+    for (const plan of selectedPlans) {
+      for (const meal of plan.meals) {
+        const recipe = await recipeCache.get(meal.recipeId);
+        if (recipe) {
+          recipes.push(recipe);
+        }
       }
     }
 
@@ -38,7 +52,7 @@ router.get('/', async (req, res, next) => {
       copyText += '\n';
     });
 
-    groceryList.weekOf = currentWeek.weekOf;
+    groceryList.weeks = selectedPlans.map(p => p.weekOf);
     groceryList.copyText = copyText;
 
     res.json(groceryList);
