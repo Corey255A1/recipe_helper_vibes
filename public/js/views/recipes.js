@@ -1,7 +1,7 @@
 const RecipesView = {
   state: {
     recipes: [],
-    viewMode: 'grid',
+    viewMode: window.innerWidth <= 768 ? 'list' : 'grid',
     searchQuery: '',
     selectedTag: '',
     sortMode: 'recent'
@@ -45,10 +45,11 @@ const RecipesView = {
             </div>
           </div>
 
-          <!-- Dynamic Tags Cloud -->
-          <div id="recipe-tag-cloud" style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
-            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-right: 0.3rem;">Filter Tag:</span>
-            <button class="btn btn-sm" style="border-radius: 2rem; padding: 0.25rem 0.75rem; font-size: 0.775rem;" onclick="RecipesView.selectTag('')">All</button>
+          <!-- Dynamic Tags Dropdown -->
+          <div style="margin-bottom: 1rem;">
+            <select id="recipe-tag-cloud-select" onchange="RecipesView.selectTag(this.value)" style="padding: 0.85rem 1rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.9rem; width: 100%;">
+              <option value="">Filter Tag: All</option>
+            </select>
           </div>
         </div>
 
@@ -110,8 +111,8 @@ const RecipesView = {
   },
 
   renderTagCloud() {
-    const tagCloud = document.getElementById('recipe-tag-cloud');
-    if (!tagCloud || !this.state.recipes) return;
+    const selectEl = document.getElementById('recipe-tag-cloud-select');
+    if (!selectEl || !this.state.recipes) return;
 
     // Collect all unique tags
     const tagCounts = {};
@@ -122,24 +123,17 @@ const RecipesView = {
       });
     });
 
-    const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - a.counts);
+    const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
 
-    let html = `
-      <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-right: 0.3rem;">Filter Tag:</span>
-      <button class="${this.state.selectedTag === '' ? 'btn btn-sm' : 'btn btn-outline btn-sm'}" style="border-radius: 2rem; padding: 0.25rem 0.75rem; font-size: 0.775rem;" onclick="RecipesView.selectTag('')">All (${this.state.recipes.length})</button>
-    `;
+    let html = `<option value="">Filter Tag: All (${this.state.recipes.length})</option>`;
 
     sortedTags.forEach(tag => {
-      const isSelected = this.state.selectedTag === tag;
+      const isSelected = this.state.selectedTag === tag ? 'selected' : '';
       const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1);
-      html += `
-        <button class="${isSelected ? 'btn btn-sm' : 'btn btn-outline btn-sm'}" style="border-radius: 2rem; padding: 0.25rem 0.75rem; font-size: 0.775rem;" onclick="RecipesView.selectTag('${tag}')">
-          ${capitalized} (${tagCounts[tag]})
-        </button>
-      `;
+      html += `<option value="${tag}" ${isSelected}>${capitalized} (${tagCounts[tag]})</option>`;
     });
 
-    tagCloud.innerHTML = html;
+    selectEl.innerHTML = html;
   },
 
   selectTag(tag) {

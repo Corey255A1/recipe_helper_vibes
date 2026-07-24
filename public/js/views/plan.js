@@ -3,7 +3,7 @@ const PlanView = {
     plans: [],
     expandedWeekOf: null,
     suggestions: [],
-    viewMode: 'grid',
+    viewMode: window.innerWidth <= 768 ? 'list' : 'grid',
     cachedRecipes: [],
     suggestCategory: '',
     cacheCategory: ''
