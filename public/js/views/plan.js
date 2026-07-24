@@ -55,7 +55,6 @@ const PlanView = {
             <button id="tab-btn-suggestions" class="btn" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('suggestions')">✨ AI Suggestions</button>
             <button id="tab-btn-cached" class="btn btn-outline" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('cached')">📁 Browse Cache</button>
             <button id="tab-btn-history" class="btn btn-outline" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('history')">📜 Past Weeks (History)</button>
-            <button id="tab-btn-import" class="btn btn-outline" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('import')">🔗 Import URL/PDF</button>
           </div>
           
           <div id="discover-suggestions-pane" class="tab-pane active">
@@ -115,25 +114,6 @@ const PlanView = {
             </div>
           </div>
 
-          <div id="discover-import-pane" class="tab-pane" style="display: none;">
-            <form onsubmit="PlanView.importLink(event)" style="margin-bottom: 2rem; background: var(--surface); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border);">
-              <h4 style="margin-bottom: 0.5rem;">Import from URL</h4>
-              <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">Paste any recipe link. The AI will extract the ingredients, steps, and details.</p>
-              <div class="form-group" style="display: flex; gap: 0.5rem;">
-                <input type="url" id="import-url" placeholder="https://example.com/recipe-url" required style="margin-bottom: 0;">
-                <button type="submit" class="btn">Import</button>
-              </div>
-            </form>
-
-            <form onsubmit="PlanView.importPdf(event)" style="background: var(--surface); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border);">
-              <h4 style="margin-bottom: 0.5rem;">Import from PDF</h4>
-              <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">Upload a PDF recipe document. The PDF will be stored next to the parsed recipe for viewing.</p>
-              <div class="form-group" style="display: flex; gap: 0.5rem; align-items: center;">
-                <input type="file" id="import-pdf-file" accept="application/pdf" required style="margin-bottom: 0;">
-                <button type="submit" class="btn">Upload & Import</button>
-              </div>
-            </form>
-          </div>
         </div>
       </div>
     `;
@@ -352,7 +332,7 @@ const PlanView = {
   async switchSubTab(tab) {
     this.activeTab = tab;
     
-    const tabs = ['suggestions', 'cached', 'history', 'import'];
+    const tabs = ['suggestions', 'cached', 'history'];
     
     tabs.forEach(t => {
       const btn = document.getElementById(`tab-btn-${t}`);
@@ -694,53 +674,5 @@ const PlanView = {
 
   closeRecipeModal() {
     RecipeCard.closeModal();
-  },
-
-  async importLink(e) {
-    e.preventDefault();
-    const urlInput = document.getElementById('import-url');
-    const url = urlInput.value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Importing...';
-    submitBtn.disabled = true;
-
-    try {
-      const recipe = await api.recipes.importLink(url);
-      Toast.show(`Imported: ${recipe.title}`, 'success');
-      urlInput.value = '';
-      await this.switchSubTab('cached');
-    } catch (err) {
-    } finally {
-      submitBtn.textContent = originalText;
-      submitBtn.disabled = false;
-    }
-  },
-
-  async importPdf(e) {
-    e.preventDefault();
-    const fileInput = document.getElementById('import-pdf-file');
-    const file = fileInput.files[0];
-    if (!file) return;
-
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Uploading...';
-    submitBtn.disabled = true;
-
-    const formData = new FormData();
-    formData.append('pdf', file);
-
-    try {
-      const recipe = await api.recipes.importPdf(formData);
-      Toast.show(`Uploaded & Parsed: ${recipe.title}`, 'success');
-      fileInput.value = '';
-      await this.switchSubTab('cached');
-    } catch (err) {
-    } finally {
-      submitBtn.textContent = originalText;
-      submitBtn.disabled = false;
-    }
   }
 };

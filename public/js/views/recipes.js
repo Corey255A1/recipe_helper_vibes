@@ -21,6 +21,7 @@ const RecipesView = {
           
           <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
             <button class="btn btn-outline" onclick="RecipesView.openBatchModal()">📂 Batch Import PDFs</button>
+            <button class="btn" onclick="RecipesView.openImportModal()">🔗 Import URL/PDF</button>
             
             <div style="display: flex; gap: 0.25rem; background: var(--surface); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
               <button id="recipes-view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲 Grid</button>
@@ -56,6 +57,38 @@ const RecipesView = {
         <!-- Recipe Content Grid -->
         <div id="recipes-library-content">
           ${Loader.render('Loading recipe library...')}
+        </div>
+
+        <!-- Single Import Modal -->
+        <div id="import-modal" class="modal-overlay">
+          <div class="modal-card" style="max-width: 540px;">
+            <h3 style="margin-bottom: 0.5rem;">🔗 Import Recipe</h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
+              Import a recipe from a URL or single PDF file.
+            </p>
+
+            <form onsubmit="RecipesView.importLink(event)" style="margin-bottom: 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 1.25rem; border-radius: 0.75rem;">
+              <h4 style="font-size: 0.95rem; margin-bottom: 0.4rem;">Import from URL</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.85rem;">Paste any recipe link. The AI will extract the ingredients, steps, and details.</p>
+              <div class="form-group" style="display: flex; gap: 0.5rem;">
+                <input type="url" id="import-url" placeholder="https://example.com/recipe-url" required style="margin-bottom: 0; flex: 1;">
+                <button type="submit" class="btn btn-sm" style="padding: 0.6rem 1rem;">Import</button>
+              </div>
+            </form>
+
+            <form onsubmit="RecipesView.importPdf(event)" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 1.25rem; border-radius: 0.75rem;">
+              <h4 style="font-size: 0.95rem; margin-bottom: 0.4rem;">Import from PDF</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.85rem;">Upload a single PDF recipe document.</p>
+              <div class="form-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="file" id="import-pdf-file" accept="application/pdf" required style="margin-bottom: 0; flex: 1;">
+                <button type="submit" class="btn btn-sm" style="padding: 0.6rem 1rem;">Upload</button>
+              </div>
+            </form>
+
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+              <button class="btn btn-outline" onclick="RecipesView.closeImportModal()">Close</button>
+            </div>
+          </div>
         </div>
 
         <!-- Batch PDF Import Modal -->
@@ -295,6 +328,68 @@ const RecipesView = {
       Toast.show(err.message || 'Folder scan failed');
     } finally {
       submitBtn.textContent = origText;
+      submitBtn.disabled = false;
+    }
+  },
+
+  openImportModal() {
+    const modal = document.getElementById('import-modal');
+    if (modal) modal.classList.add('open');
+  },
+
+  closeImportModal() {
+    const modal = document.getElementById('import-modal');
+    if (modal) modal.classList.remove('open');
+  },
+
+  async importLink(e) {
+    e.preventDefault();
+    const urlInput = document.getElementById('import-url');
+    const url = urlInput.value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Importing...';
+    submitBtn.disabled = true;
+
+    try {
+      const recipe = await api.recipes.importLink(url);
+      Toast.show(`Imported: ${recipe.title}`, 'success');
+      urlInput.value = '';
+      this.closeImportModal();
+      await this.loadRecipes();
+    } catch (err) {
+      Toast.show('Failed to import recipe');
+    } finally {
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    }
+  },
+
+  async importPdf(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('import-pdf-file');
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Uploading...';
+    submitBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('pdf', file);
+
+    try {
+      const recipe = await api.recipes.importPdf(formData);
+      Toast.show(`Uploaded & Parsed: ${recipe.title}`, 'success');
+      fileInput.value = '';
+      this.closeImportModal();
+      await this.loadRecipes();
+    } catch (err) {
+      Toast.show('Failed to import PDF');
+    } finally {
+      submitBtn.textContent = originalText;
       submitBtn.disabled = false;
     }
   }
