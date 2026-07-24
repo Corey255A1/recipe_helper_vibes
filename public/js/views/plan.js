@@ -364,7 +364,7 @@ const PlanView = {
   renderCache(recipes) {
     const content = document.getElementById('cache-content');
     if (!recipes || recipes.length === 0) {
-      content.innerHTML = `<p style="color: var(--text-muted);">No saved recipes found.</p>`;
+      content.innerHTML = `<p style="color: var(--text-secondary);">No saved recipes found.</p>`;
       return;
     }
 
@@ -373,11 +373,11 @@ const PlanView = {
 
     recipes.forEach(recipe => {
       const actions = `
-        <div class="actions">
-          <button class="btn" style="background: var(--success); width: 100%;" onclick="PlanView.decide('${recipe.id}', 'yes')">➕ Add to Plan</button>
+        <div class="actions" style="flex: 1; margin-top: 0;">
+          <button class="btn" style="background: var(--success); width: 100%; padding: 0.55rem 0.75rem; font-size: 0.85rem;" onclick="PlanView.decide('${recipe.id}', 'yes')">➕ Add to Plan</button>
         </div>
       `;
-      grid.innerHTML += RecipeCard.render(recipe, actions);
+      grid.innerHTML += RecipeCard.render(recipe, actions, false);
     });
 
     content.innerHTML = '';
@@ -399,7 +399,7 @@ const PlanView = {
   renderSuggestions() {
     const content = document.getElementById('discover-content');
     if (!this.state.suggestions || !this.state.suggestions.length) {
-      content.innerHTML = `<p style="color: var(--text-muted);">No suggestions available. Click "Suggest Meals" to get started.</p>`;
+      content.innerHTML = `<p style="color: var(--text-secondary);">No suggestions available. Click "Suggest Meals" to get started.</p>`;
       return;
     }
 
@@ -408,13 +408,12 @@ const PlanView = {
     
     this.state.suggestions.forEach(recipe => {
       const actions = `
-        <div class="actions">
-          <button class="btn" style="background: var(--success);" onclick="PlanView.decide('${recipe.id}', 'yes')">✅ Yes</button>
-          <button class="btn btn-outline" onclick="PlanView.decide('${recipe.id}', 'not_this_time')">⏭️ Skip</button>
-          <button class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);" onclick="PlanView.decide('${recipe.id}', 'never')">🚫 Never</button>
+        <div class="actions" style="display: flex; gap: 0.4rem; flex: 2; margin-top: 0;">
+          <button class="btn" style="background: var(--success); flex: 1.2; padding: 0.55rem 0.65rem; font-size: 0.85rem;" onclick="PlanView.decide('${recipe.id}', 'yes')">➕ Add to Plan</button>
+          <button class="btn btn-outline" style="flex: 0.8; padding: 0.55rem 0.65rem; font-size: 0.85rem;" onclick="PlanView.decide('${recipe.id}', 'not_this_time')">⏭️ Skip</button>
         </div>
       `;
-      grid.innerHTML += RecipeCard.render(recipe, actions);
+      grid.innerHTML += RecipeCard.render(recipe, actions, true);
     });
 
     content.innerHTML = '';

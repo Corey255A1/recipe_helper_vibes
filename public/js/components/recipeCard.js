@@ -1,28 +1,51 @@
 const RecipeCard = {
-  render(recipe, actionsHtml = '') {
-    const tags = (recipe.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
-    
+  render(recipe, actionsHtml = '', isSuggestion = false) {
+    const rawTags = recipe.tags || [];
+    let tagsHtml = '';
+    if (rawTags.length > 0) {
+      const visibleTags = rawTags.slice(0, 2);
+      const remainingCount = rawTags.length - 2;
+      tagsHtml = visibleTags.map(t => `<span class="tag">${t}</span>`).join('');
+      if (remainingCount > 0) {
+        const remainingList = rawTags.slice(2).join(', ');
+        tagsHtml += `<span class="tag tag-more" title="${remainingList}">+${remainingCount} more</span>`;
+      }
+    }
+
+    let sourceBadgeHtml = '';
+    if (recipe.pdfPath) {
+      sourceBadgeHtml = `<span class="source-badge pdf"><a href="${recipe.pdfPath}" target="_blank" style="color: inherit; text-decoration: none;">📄 PDF</a></span>`;
+    } else if (recipe.source && (recipe.source.startsWith('http://') || recipe.source.startsWith('https://'))) {
+      sourceBadgeHtml = `<span class="source-badge web"><a href="${recipe.source}" target="_blank" style="color: inherit; text-decoration: none;">🌐 Web Recipe</a></span>`;
+    } else {
+      sourceBadgeHtml = `<span class="source-badge saved">💾 Saved</span>`;
+    }
+
+    const neverBtnHtml = isSuggestion ? `
+      <button onclick="PlanView.decide('${recipe.id}', 'never')" title="Never recommend this recipe again" class="btn-never-tertiary">
+        ✕ Don't show
+      </button>
+    ` : '';
+
     return `
       <div class="recipe-card" data-id="${recipe.id}">
-        <div class="card-main-info">
-          <h3>${recipe.title}</h3>
-          <div class="recipe-meta">
-            <span>⏱️ ${recipe.totalTime}m</span>
-            <span>🍽️ ${recipe.servings} servings</span>
-            ${recipe.pdfPath 
-              ? `<span><a href="${recipe.pdfPath}" target="_blank" style="color: var(--primary); text-decoration: underline;">📄 View PDF</a></span>` 
-              : (recipe.source && (recipe.source.startsWith('http://') || recipe.source.startsWith('https://'))
-                ? `<span><a href="${recipe.source}" target="_blank" style="color: var(--primary); text-decoration: underline;">🌐 Source Link</a></span>`
-                : `<span>Source: ${recipe.source || 'Unknown'}</span>`
-              )
-            }
-          </div>
-          <div class="tags" style="margin-bottom: 0.75rem;">${tags}</div>
+        <div class="card-header-row">
+          <div class="recipe-source-meta">${sourceBadgeHtml}</div>
+          ${neverBtnHtml}
         </div>
         
-        <div class="card-actions-wrapper">
-          <button class="btn btn-outline btn-details" onclick="RecipeCard.openModal('${recipe.id}')">
-            View Details
+        <div class="card-main-info" onclick="RecipeCard.openModal('${recipe.id}')" style="cursor: pointer;" title="Click to view details">
+          <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0.4rem; color: #f8fafc;">${recipe.title}</h3>
+          <div class="recipe-meta" style="margin-bottom: 0.75rem;">
+            <span>⏱️ ${recipe.totalTime || (recipe.prepTime + recipe.cookTime) || 20}m</span>
+            <span>🍽️ ${recipe.servings || 4} servings</span>
+          </div>
+          <div class="tags" style="margin-bottom: 0.85rem;">${tagsHtml}</div>
+        </div>
+        
+        <div class="card-actions-wrapper" style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="btn btn-outline btn-details" style="flex: 1;" onclick="RecipeCard.openModal('${recipe.id}')">
+            📖 View Details
           </button>
           ${actionsHtml}
         </div>
