@@ -110,12 +110,12 @@ const GroceryView = {
               </div>
               ${meals.length > 0 ? meals.map(m => {
                 const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                return \`
+                return `
                   <div style="font-size: 0.8rem; color: #f8fafc; font-weight: 500; margin-bottom: 0.25rem; line-height: 1.3;">
-                    🍳 \${cleanTitle}
+                    🍳 ${cleanTitle}
                   </div>
-                \`;
-              }).join('') : \`<div style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">No meal</div>\`}
+                `;
+              }).join('') : `<div style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">No meal</div>`}
             </div>
           `;
         });
@@ -126,7 +126,7 @@ const GroceryView = {
               <div style="font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem; text-transform: uppercase;">Unassigned</div>
               ${unassigned.map(m => {
                 const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                return \`<div style="font-size: 0.8rem; color: #f8fafc; font-weight: 500; margin-bottom: 0.25rem;">🍳 \${cleanTitle}</div>\`;
+                return `<div style="font-size: 0.8rem; color: #f8fafc; font-weight: 500; margin-bottom: 0.25rem;">🍳 ${cleanTitle}</div>`;
               }).join('')}
             </div>
           `;
