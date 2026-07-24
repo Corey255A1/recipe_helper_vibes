@@ -1,13 +1,6 @@
 const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 const config = require('../config');
-
-// Initialize Gemini SDK
-const apiKey = (config.geminiApiKey && config.geminiApiKey !== 'your_gemini_api_key_here') 
-  ? config.geminiApiKey 
-  : (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' ? process.env.GEMINI_API_KEY : null);
-
-const genAI = new GoogleGenerativeAI(apiKey || "dummy_key");
-const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+const fs = require('fs').promises;
 
 // Recipe schema for suggestions
 const recipeSchema = {
@@ -63,7 +56,28 @@ const grocerySchema = {
 
 
 class GeminiService {
+  async getModel() {
+    let apiKey = process.env.GEMINI_API_KEY || config.geminiApiKey;
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+      try {
+        const contextData = await fs.readFile(config.dataPaths.context, 'utf-8');
+        const context = JSON.parse(contextData);
+        if (context.geminiApiKey && context.geminiApiKey !== 'your_gemini_api_key_here') {
+          apiKey = context.geminiApiKey;
+        }
+      } catch (e) {}
+    }
+
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+      throw new Error('Gemini API key is not configured. Please set the GEMINI_API_KEY environment variable or save it in the app preferences.');
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  }
+
   async generateSuggestions(context, history, cacheSummaries, neededMeals, mealType = '') {
+    const model = await this.getModel();
     const mealTypeContext = mealType ? `\nFocus EXCLUSIVELY on suggestions for: ${mealType}.` : '';
     
     const prompt = `
@@ -97,6 +111,7 @@ Return the response as a JSON array matching the schema.
   }
 
   async generateGroceryList(recipes, context) {
+    const model = await this.getModel();
     const prompt = `
 You are an expert at combining grocery lists.
 Here are the recipes the user selected for the week:
@@ -122,6 +137,7 @@ Return a JSON object matching the schema.
   }
 
   async extractRecipeFromText(text, source) {
+    const model = await this.getModel();
     const prompt = `
 You are an expert recipe parser.
 Below is text extracted from a recipe webpage or document. Extract the recipe details and format them as a single JSON object.
@@ -145,6 +161,7 @@ ${text}
   }
 
   async extractRecipeFromPdf(pdfBuffer, source) {
+    const model = await this.getModel();
     const prompt = `
 You are an expert recipe parser.
 Below is an uploaded PDF recipe document (which may contain text or scanned images). Extract the recipe details and format them as a single JSON object.
