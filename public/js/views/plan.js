@@ -35,12 +35,15 @@ const PlanView = {
         </div>
 
         <div id="discover-section" style="border-top: 1px solid var(--border); padding-top: 2rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <h2>Discover Meals</h2>
             
-            <div style="display: flex; gap: 0.25rem; background: var(--surface); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
-              <button id="view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲 Grid</button>
-              <button id="view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">☰ List</button>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <button class="btn" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.suggest()">✨ Suggest Meals</button>
+              <div style="display: flex; gap: 0.25rem; background: var(--surface); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                <button id="view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲 Grid</button>
+                <button id="view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">☰ List</button>
+              </div>
             </div>
           </div>
 
@@ -52,11 +55,8 @@ const PlanView = {
           </div>
           
           <div id="discover-suggestions-pane" class="tab-pane active">
-            <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end;">
-              <button class="btn" onclick="PlanView.suggest()">Suggest Meals</button>
-            </div>
             <div id="discover-content">
-              <p style="color: var(--text-muted);">Click "Suggest Meals" to get AI recommendations based on your preferences.</p>
+              <p style="color: var(--text-secondary);">Click "Suggest Meals" to get AI recommendations based on your preferences.</p>
             </div>
           </div>
 
@@ -83,7 +83,7 @@ const PlanView = {
           <div id="discover-import-pane" class="tab-pane" style="display: none;">
             <form onsubmit="PlanView.importLink(event)" style="margin-bottom: 2rem; background: var(--surface); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border);">
               <h4 style="margin-bottom: 0.5rem;">Import from URL</h4>
-              <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Paste any recipe link. The AI will extract the ingredients, steps, and details.</p>
+              <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">Paste any recipe link. The AI will extract the ingredients, steps, and details.</p>
               <div class="form-group" style="display: flex; gap: 0.5rem;">
                 <input type="url" id="import-url" placeholder="https://example.com/recipe-url" required style="margin-bottom: 0;">
                 <button type="submit" class="btn">Import</button>
@@ -92,7 +92,7 @@ const PlanView = {
 
             <form onsubmit="PlanView.importPdf(event)" style="background: var(--surface); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border);">
               <h4 style="margin-bottom: 0.5rem;">Import from PDF</h4>
-              <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Upload a PDF recipe document. The PDF will be stored next to the parsed recipe for viewing.</p>
+              <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">Upload a PDF recipe document. The PDF will be stored next to the parsed recipe for viewing.</p>
               <div class="form-group" style="display: flex; gap: 0.5rem; align-items: center;">
                 <input type="file" id="import-pdf-file" accept="application/pdf" required style="margin-bottom: 0;">
                 <button type="submit" class="btn">Upload & Import</button>
@@ -167,7 +167,7 @@ const PlanView = {
                 <span class="day-name">${dayShort}</span>
                 <span class="day-date">${dateStr}</span>
               </div>
-              <span class="day-meal-badge">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>
+              ${meals.length > 0 ? `<span class="day-meal-badge">${meals.length} ${meals.length === 1 ? 'meal' : 'meals'}</span>` : ''}
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1;">
@@ -176,22 +176,21 @@ const PlanView = {
                 return `
                   <div class="day-meal-item">
                     <div class="day-meal-top">
-                      <div class="day-meal-title-group">
-                        <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
-                        <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" class="day-meal-title">
-                          ${cleanTitle}
-                        </a>
+                      <div class="day-meal-title-group" onclick="PlanView.viewRecipe('${m.recipeId}')" style="cursor: pointer;" title="Click to view recipe details">
+                        <span class="drag-handle" title="Drag handle">⋮⋮</span>
+                        <span class="day-meal-title">🍳 ${cleanTitle}</span>
                       </div>
-                      <button onclick="PlanView.removeMeal('${m.recipeId}')" title="Remove ${cleanTitle}" class="btn-remove-meal">
-                        🗑️
-                      </button>
+                      <div style="display: flex; align-items: center; gap: 0.25rem;">
+                        <button onclick="PlanView.editMealDays('${m.recipeId}')" title="Reassign meal days" class="action-icon-btn edit-icon-btn">
+                          ✏️
+                        </button>
+                        <button onclick="PlanView.removeMeal('${m.recipeId}')" title="Remove ${cleanTitle}" class="action-icon-btn remove-icon-btn">
+                          🗑️
+                        </button>
+                      </div>
                     </div>
-                    <div class="day-meal-meta">
+                    <div class="day-meal-meta" onclick="PlanView.viewRecipe('${m.recipeId}')" style="cursor: pointer;" title="Click to view recipe details">
                       <span class="meta-servings">🍽️ ${m.servings} servings</span>
-                      <div class="action-btn-group">
-                        <button onclick="PlanView.editMealDays('${m.recipeId}')" class="action-btn action-btn-edit">📅 Edit</button>
-                        <button onclick="PlanView.viewRecipe('${m.recipeId}')" class="action-btn action-btn-details">📖 Details →</button>
-                      </div>
                     </div>
                   </div>
                 `;
