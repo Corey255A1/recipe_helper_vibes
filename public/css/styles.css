@@ -519,10 +519,23 @@ input:focus, textarea:focus, select:focus {
   border-radius: 0.75rem;
   padding: 0.65rem 1rem;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 0.85rem;
   transition: all 0.2s ease;
   flex-wrap: wrap;
+}
+.meal-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+.meal-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 .day-meal-row-card:hover {
   background: rgba(255, 255, 255, 0.07);
@@ -535,7 +548,6 @@ input:focus, textarea:focus, select:focus {
   color: #f8fafc;
   text-decoration: none;
   flex: 1;
-  min-width: 220px;
   line-height: 1.35;
 }
 .meal-row-title:hover {
@@ -997,16 +1009,18 @@ input:focus, textarea:focus, select:focus {
   
   .day-meal-row-card {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .meal-row-main {
+    width: 100%;
+  }
+  .meal-row-meta {
+    width: 100%;
+    justify-content: space-between;
   }
   .meal-row-title {
     min-width: 0;
-    width: 100%;
-  }
-  .meal-row-actions {
-    width: 100%;
-    justify-content: flex-end;
   }
   .day-checkboxes {
     justify-content: center;

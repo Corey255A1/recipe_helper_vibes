@@ -258,15 +258,19 @@ const PlanView = {
                   
                   return `
                     <div class="day-meal-row-card">
-                      <span class="drag-handle" title="Drag handle">⋮⋮</span>
-                      <span style="font-size: 1.05rem;" title="${m.mealType || 'Dinner'}">${typeIcon}</span>
-                      <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" class="meal-row-title" title="Click to view recipe details">
-                        ${cleanTitle}
-                      </a>
-                      <span class="meal-row-servings">🍽️ ${m.servings} servings</span>
-                      <div class="meal-row-actions">
-                        <button onclick="PlanView.editMealDays('${m.recipeId}', '${plan.weekOf}')" title="Reassign meal days" class="action-btn action-btn-edit">✏️ Edit</button>
-                        <button onclick="PlanView.removeMeal('${m.recipeId}', '${plan.weekOf}')" title="Remove ${cleanTitle}" class="btn-remove-meal">🗑️ Remove</button>
+                      <div class="meal-row-main">
+                        <span class="drag-handle" title="Drag handle">⋮⋮</span>
+                        <span style="font-size: 1.05rem;" title="${m.mealType || 'Dinner'}">${typeIcon}</span>
+                        <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}')" class="meal-row-title" title="Click to view recipe details">
+                          ${cleanTitle}
+                        </a>
+                      </div>
+                      <div class="meal-row-meta">
+                        <span class="meal-row-servings">🍽️ ${m.servings} servings</span>
+                        <div class="meal-row-actions">
+                          <button onclick="PlanView.editMealDays('${m.recipeId}', '${plan.weekOf}')" title="Reassign meal days" class="action-btn action-btn-edit">✏️ Edit</button>
+                          <button onclick="PlanView.removeMeal('${m.recipeId}', '${plan.weekOf}')" title="Remove ${cleanTitle}" class="btn-remove-meal">🗑️ Remove</button>
+                        </div>
                       </div>
                     </div>
                   `;
