@@ -53,7 +53,6 @@ const PlanView = {
 
           <div class="sub-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap;">
             <button id="tab-btn-suggestions" class="btn" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('suggestions')">✨ AI Suggestions</button>
-            <button id="tab-btn-cached" class="btn btn-outline" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('cached')">📁 Browse Cache</button>
             <button id="tab-btn-history" class="btn btn-outline" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('history')">📜 Past Weeks (History)</button>
           </div>
           
@@ -84,29 +83,6 @@ const PlanView = {
             </div>
           </div>
 
-          <div id="discover-cached-pane" class="tab-pane" style="display: none;">
-            <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <input type="text" id="cache-search" placeholder="Search saved recipes..." oninput="PlanView.filterAndSortCache()" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-              <select id="cache-sort" onchange="PlanView.filterAndSortCache()" style="margin-bottom: 0; padding: 0.5rem 1rem; border-radius: 0.5rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 0.875rem;">
-                <option value="recent" selected>Sort by: Date Added (Newest First)</option>
-                <option value="oldest">Sort by: Date Added (Oldest First)</option>
-                <option value="title">Sort by: Title (A - Z)</option>
-              </select>
-            </div>
-
-            <div id="cache-category-bar" style="margin-bottom: 1.5rem; display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.25rem;">
-               <button class="btn btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('')">All Saved</button>
-               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Breakfast')">🥞 Breakfast</button>
-               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Lunch')">🥗 Lunch</button>
-               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Dinner')">🍽️ Dinner</button>
-               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Snack')">🥨 Snack</button>
-               <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setCacheCategoryFilter('Dessert')">🍰 Dessert</button>
-            </div>
-
-            <div id="cache-content">
-              ${Loader.render('Loading recipe library...')}
-            </div>
-          </div>
 
           <div id="discover-history-pane" class="tab-pane" style="display: none;">
             <div id="history-content">
@@ -151,14 +127,6 @@ const PlanView = {
     });
   },
 
-  setCacheCategoryFilter(category) {
-    this.state.cacheCategory = category;
-    document.querySelectorAll('#cache-category-bar button').forEach(btn => {
-      const isTarget = (category === '' && btn.innerText.includes('All')) || (category !== '' && btn.innerText.includes(category));
-      btn.className = isTarget ? 'btn btn-sm' : 'btn btn-outline btn-sm';
-    });
-    this.filterAndSortCache();
-  },
 
   async addFutureWeek() {
     try {
@@ -332,7 +300,7 @@ const PlanView = {
   async switchSubTab(tab) {
     this.activeTab = tab;
     
-    const tabs = ['suggestions', 'cached', 'history'];
+    const tabs = ['suggestions', 'history'];
     
     tabs.forEach(t => {
       const btn = document.getElementById(`tab-btn-${t}`);
@@ -347,8 +315,6 @@ const PlanView = {
 
     if (tab === 'suggestions') {
       this.renderSuggestions();
-    } else if (tab === 'cached') {
-      await this.loadCache();
     } else if (tab === 'history') {
       await this.loadHistory();
     }
@@ -414,76 +380,13 @@ const PlanView = {
     content.innerHTML = html;
   },
 
-  async loadCache() {
-    const content = document.getElementById('cache-content');
-    try {
-      this.state.cachedRecipes = await api.recipes.list();
-      this.filterAndSortCache();
-    } catch (e) {
-      content.innerHTML = `<p style="color: var(--danger);">Failed to load cached recipes.</p>`;
-    }
-  },
-
-  filterAndSortCache() {
-    if (!this.state.cachedRecipes) return;
-    
-    const searchVal = (document.getElementById('cache-search')?.value || '').toLowerCase();
-    const sortVal = document.getElementById('cache-sort')?.value || 'recent';
-    const catVal = (this.state.cacheCategory || '').toLowerCase();
-
-    let filtered = this.state.cachedRecipes.filter(recipe => {
-      const titleMatch = recipe.title.toLowerCase().includes(searchVal);
-      const tagMatch = (recipe.tags || []).some(t => t.toLowerCase().includes(searchVal));
-      const matchesSearch = !searchVal || titleMatch || tagMatch;
-
-      let matchesCat = true;
-      if (catVal) {
-        const inTags = (recipe.tags || []).some(t => t.toLowerCase().includes(catVal));
-        const inTitle = recipe.title.toLowerCase().includes(catVal);
-        const inMealType = recipe.mealType && recipe.mealType.toLowerCase() === catVal;
-        matchesCat = inTags || inTitle || inMealType;
-      }
-
-      return matchesSearch && matchesCat;
-    });
-
-    Utils.sortRecipes(filtered, sortVal);
-
-    this.renderCache(filtered);
-  },
-
   setViewMode(mode) {
     this.state.viewMode = mode;
     Utils.updateViewModeButtons(mode, 'view-mode-grid', 'view-mode-list');
     
     if (this.activeTab === 'suggestions') {
       this.renderSuggestions();
-    } else if (this.activeTab === 'cached' && this.state.cachedRecipes) {
-      this.filterAndSortCache();
     }
-  },
-
-  renderCache(recipes) {
-    const content = document.getElementById('cache-content');
-    if (!recipes || recipes.length === 0) {
-      content.innerHTML = `<p style="color: var(--text-secondary);">No saved recipes found for this filter.</p>`;
-      return;
-    }
-
-    const grid = document.createElement('div');
-    grid.className = `recipe-grid ${this.state.viewMode === 'list' ? 'list-view' : ''}`;
-
-    recipes.forEach(recipe => {
-      const actions = `
-        <div class="actions" style="flex: 1; margin-top: 0;">
-          <button class="btn" style="background: var(--success); width: 100%; padding: 0.55rem 0.75rem; font-size: 0.85rem;" onclick="PlanView.decide('${recipe.id}', 'yes')">➕ Add to Plan</button>
-        </div>
-      `;
-      grid.innerHTML += RecipeCard.render(recipe, actions, false);
-    });
-
-    content.innerHTML = '';
-    content.appendChild(grid);
   },
 
   async suggest() {
