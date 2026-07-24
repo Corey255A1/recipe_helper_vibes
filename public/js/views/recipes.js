@@ -238,7 +238,8 @@ const RecipesView = {
         history.pushState({ route: 'plan' }, '', '#plan');
       }
       
-      PlanView.openDayModal([], 'Dinner', PlanView.state.expandedWeekOf);
+      const targetWeek = PlanView.getActiveWeekOf ? PlanView.getActiveWeekOf() : PlanView.state.expandedWeekOf;
+      PlanView.openDayModal([], 'Dinner', targetWeek);
     } else {
       Toast.show('Recipe selected for plan', 'info');
     }

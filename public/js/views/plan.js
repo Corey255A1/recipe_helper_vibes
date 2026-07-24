@@ -95,18 +95,21 @@ const PlanView = {
     `;
   },
 
+  getActiveWeekOf() {
+    return this.state.expandedWeekOf || (this.state.plans && this.state.plans.length > 0 ? this.state.plans[0].weekOf : null);
+  },
+
   async init() {
     this.activeTab = this.activeTab || 'suggestions';
     this.state.suggestCategory = '';
     this.state.cacheCategory = '';
+    this.state.expandedWeekOf = null;
     
     try {
       this.state.plans = await api.plan.plans();
       if (this.state.plans && this.state.plans.length > 0) {
-        if (!this.state.expandedWeekOf) {
-          this.state.expandedWeekOf = this.state.plans[0].weekOf;
-        }
-        const activePlan = this.state.plans.find(p => p.weekOf === this.state.expandedWeekOf);
+        const activeWeek = this.getActiveWeekOf();
+        const activePlan = this.state.plans.find(p => p.weekOf === activeWeek);
         if (activePlan && activePlan.pendingSuggestions && activePlan.pendingSuggestions.length > 0) {
           this.state.suggestions = activePlan.pendingSuggestions;
         }
@@ -397,10 +400,11 @@ const PlanView = {
     const content = document.getElementById('discover-content');
     content.innerHTML = Loader.render('Generating customized meal suggestions...');
     
+    const targetWeek = this.getActiveWeekOf();
     try {
-      this.state.suggestions = await api.plan.suggest(this.state.expandedWeekOf, this.state.suggestCategory);
-      if (this.state.expandedWeekOf) {
-        const activePlan = this.state.plans.find(p => p.weekOf === this.state.expandedWeekOf);
+      this.state.suggestions = await api.plan.suggest(targetWeek, this.state.suggestCategory);
+      if (targetWeek) {
+        const activePlan = this.state.plans.find(p => p.weekOf === targetWeek);
         if (activePlan) activePlan.pendingSuggestions = this.state.suggestions;
       }
       this.renderSuggestions();
@@ -434,11 +438,12 @@ const PlanView = {
   },
 
   async decide(id, decision) {
+    const targetWeek = this.getActiveWeekOf();
     if (decision === 'yes') {
       this.activeRecipeId = id;
-      this.openDayModal([], 'Dinner', this.state.expandedWeekOf);
+      this.openDayModal([], 'Dinner', targetWeek);
     } else {
-      await this.submitDecision(id, decision, [], null, this.state.expandedWeekOf);
+      await this.submitDecision(id, decision, [], null, targetWeek);
     }
   },
 
