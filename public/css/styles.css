@@ -262,25 +262,61 @@ input:focus, textarea:focus, select:focus {
 /* List View variant */
 .recipe-grid.list-view {
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 .recipe-grid.list-view .recipe-card {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  gap: 1rem;
+  justify-content: flex-start;
+  padding: 0.75rem 1.25rem;
+  gap: 1.25rem;
+}
+.recipe-grid.list-view .card-header-row {
+  margin-bottom: 0;
 }
 .recipe-grid.list-view .card-main-info {
   flex: 1;
-  min-width: 280px;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-width: 0; /* allow truncation */
+}
+.recipe-grid.list-view .card-main-info h3 {
+  margin-bottom: 0;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recipe-grid.list-view .recipe-meta {
+  margin-bottom: 0;
+  flex-wrap: nowrap;
+}
+.recipe-grid.list-view .tags {
+  margin-bottom: 0;
 }
 .recipe-grid.list-view .card-actions-wrapper {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .recipe-grid.list-view .recipe-card {
+    flex-wrap: wrap;
+  }
+  .recipe-grid.list-view .card-main-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .recipe-grid.list-view .card-main-info h3 {
+    white-space: normal;
+  }
 }
 .recipe-grid.list-view .recipe-card .card-actions-wrapper .btn-details {
   width: auto;

@@ -11,46 +11,34 @@ const RecipesView = {
     const isGrid = this.state.viewMode === 'grid';
     return `
       <div class="view" id="recipes-view">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-          <div>
-            <h2>📚 Recipe Library</h2>
-            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.2rem;">
-              Browse and manage your markdown recipe collection and linked PDFs.
-            </p>
-          </div>
-          
-          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-            <button class="btn btn-outline" onclick="RecipesView.openBatchModal()">📂 Batch Import PDFs</button>
-            <button class="btn" onclick="RecipesView.openImportModal()">🔗 Import URL/PDF</button>
+        <!-- Sticky Control Panel -->
+        <div style="position: sticky; top: 75px; z-index: 90; background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1rem 1.5rem; margin-bottom: 2rem; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+          <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
             
-            <div style="display: flex; gap: 0.25rem; background: var(--surface); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
-              <button id="recipes-view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲 Grid</button>
-              <button id="recipes-view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">☰ List</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filter & Search Control Panel -->
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.5rem; margin-bottom: 2rem;">
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
-            <div style="flex: 1; min-width: 260px;">
-              <input type="text" id="recipe-library-search" placeholder="🔍 Search recipes by title, tag, or ingredient..." oninput="RecipesView.handleSearch(this.value)" style="margin-bottom: 0;">
-            </div>
-            
-            <div style="min-width: 220px;">
-              <select id="recipe-library-sort" onchange="RecipesView.handleSort(this.value)" style="margin-bottom: 0; padding: 0.85rem 1rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.9rem;">
-                <option value="recent" selected>Sort by: Date Added (Newest)</option>
-                <option value="oldest">Sort by: Date Added (Oldest)</option>
-                <option value="title">Sort by: Title (A - Z)</option>
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; min-width: 320px; flex-wrap: wrap;">
+              <input type="text" id="recipe-library-search" placeholder="🔍 Search recipes..." oninput="RecipesView.handleSearch(this.value)" style="margin-bottom: 0; flex: 1; min-width: 150px; padding: 0.65rem 1rem;">
+              
+              <select id="recipe-library-sort" onchange="RecipesView.handleSort(this.value)" style="margin-bottom: 0; width: auto; padding: 0.65rem 1rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.9rem;">
+                <option value="recent" selected>Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="title">A - Z</option>
+              </select>
+              
+              <select id="recipe-tag-cloud-select" onchange="RecipesView.selectTag(this.value)" style="margin-bottom: 0; width: auto; padding: 0.65rem 1rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.9rem;">
+                <option value="">Tag: All</option>
               </select>
             </div>
-          </div>
-
-          <!-- Dynamic Tags Dropdown -->
-          <div style="margin-bottom: 1rem;">
-            <select id="recipe-tag-cloud-select" onchange="RecipesView.selectTag(this.value)" style="padding: 0.85rem 1rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.9rem; width: 100%;">
-              <option value="">Filter Tag: All</option>
-            </select>
+            
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <button class="btn btn-outline" style="padding: 0.55rem 0.85rem; font-size: 0.85rem;" onclick="RecipesView.openBatchModal()">📂 Batch Import</button>
+              <button class="btn" style="padding: 0.55rem 0.85rem; font-size: 0.85rem;" onclick="RecipesView.openImportModal()">🔗 Import URL/PDF</button>
+              
+              <div style="display: flex; gap: 0.2rem; background: var(--bg); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border); margin-left: 0.25rem;">
+                <button id="recipes-view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.65rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲</button>
+                <button id="recipes-view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.65rem; font-size: 0.85rem; border-radius: 0.35rem;">☰</button>
+              </div>
+            </div>
+            
           </div>
         </div>
 
