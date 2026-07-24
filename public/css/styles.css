@@ -170,7 +170,8 @@ body.route-recipes {
 
 @media (max-width: 768px) {
   #recipes-view.active {
-    height: calc(100dvh - 130px);
+    margin-top: 0.25rem;
+    height: calc(100dvh - 110px);
   }
   body.route-recipes main.container {
     padding: 2px;
@@ -178,7 +179,7 @@ body.route-recipes {
   .library-control-panel {
     padding: 0.85rem 1rem;
     border-radius: 0.75rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 }
 
