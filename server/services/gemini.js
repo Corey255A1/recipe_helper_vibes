@@ -138,6 +138,17 @@ class GeminiService {
 
   async generateSuggestions(context, history, cacheSummaries, neededMeals, mealType = '') {
     const mealTypeContext = mealType ? `\nFocus EXCLUSIVELY on suggestions for: ${mealType}.` : '';
+    const cachedCount = (cacheSummaries || []).length;
+    
+    let cacheTarget = 0;
+    let webTarget = 10;
+    if (cachedCount >= 7) {
+      cacheTarget = 7;
+      webTarget = 3;
+    } else if (cachedCount > 0) {
+      cacheTarget = cachedCount;
+      webTarget = 10 - cachedCount;
+    }
     
     const prompt = `
 You are an expert meal planner. The user needs ${neededMeals} meal suggestions for this week.${mealTypeContext}
@@ -149,11 +160,16 @@ Their default servings is ${context.servings}. Leftovers enabled: ${context.left
 Here is their meal history for the past few weeks (avoid repeating these unless they are staples):
 ${JSON.stringify(history)}
 
-Here is a summary of their existing recipe cache:
+Here is a summary of their existing recipe cache (${cachedCount} saved recipes):
 ${JSON.stringify(cacheSummaries)}
 
-Please provide exactly 10 recipe suggestions. Try to include a mix of about 5 from their cache and 5 new recipes from the web.
-For new recipes, provide a source URL if possible, or indicate "web". For cached ones, use "cache".
+RECIPE SELECTION RATIO INSTRUCTIONS:
+- You must provide up to 10 total recipe suggestions.
+- If there are enough cached recipes available (at least 7), select exactly ${cacheTarget} recipes from their existing cache and ${webTarget} new recipes from the web.
+- Otherwise, use all available cached recipes (${cacheTarget}) and fill the remaining spots (${webTarget}) with new recipes from the web to reach 10 total suggestions.
+- For recipes from their cache, set "source": "cache".
+- For new web recipes, provide a full valid source URL or "web".
+
 Return the response as a JSON array matching the schema.
     `;
 
