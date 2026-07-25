@@ -100,9 +100,11 @@ router.post('/batch-import-pdf', upload.array('pdfs', 20), async (req, res, next
         await delay(4000);
       }
       try {
+        console.log(`[BATCH UPLOAD] Processing PDF ${i + 1}/${req.files.length}: ${file.originalname}`);
         const saved = await processAndSavePdfRecipe(file.buffer, file.originalname);
         processed.push(saved);
       } catch (err) {
+        console.error(`[BATCH UPLOAD ERROR] ${file.originalname}:`, err.message);
         errors.push({ file: file.originalname, error: err.message });
       }
     }
@@ -142,12 +144,14 @@ router.post('/batch-import-folder', async (req, res, next) => {
         await delay(4000);
       }
       try {
+        console.log(`[BATCH FOLDER] Processing PDF ${i + 1}/${pdfFiles.length}: ${fileName}`);
         const filePath = path.join(targetDir, fileName);
         const buffer = await fs.readFile(filePath);
         
         const saved = await processAndSavePdfRecipe(buffer, fileName);
         processed.push(saved);
       } catch (err) {
+        console.error(`[BATCH FOLDER ERROR] ${fileName}:`, err.message);
         errors.push({ file: fileName, error: err.message });
       }
     }

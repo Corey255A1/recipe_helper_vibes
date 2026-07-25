@@ -73,6 +73,8 @@ const RecipesView = {
               </div>
             </form>
 
+            <div id="single-import-status"></div>
+
             <div class="modal-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
               <button class="btn btn-outline" onclick="RecipesView.closeImportModal()">Close</button>
             </div>
@@ -106,6 +108,8 @@ const RecipesView = {
                 <button type="submit" class="btn btn-outline btn-sm" style="padding: 0.6rem 1rem;">Scan & Process</button>
               </div>
             </form>
+
+            <div id="batch-import-status"></div>
 
             <div class="modal-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
               <button class="btn btn-outline" onclick="RecipesView.closeBatchModal()">Close</button>
@@ -269,20 +273,72 @@ const RecipesView = {
     if (modal) modal.classList.add('open');
   },
 
+  openBatchModal() {
+    const modal = document.getElementById('batch-pdf-modal');
+    const statusEl = document.getElementById('batch-import-status');
+    if (statusEl) statusEl.innerHTML = '';
+    if (modal) modal.classList.add('open');
+  },
+
   closeBatchModal() {
     const modal = document.getElementById('batch-pdf-modal');
     if (modal) modal.classList.remove('open');
   },
 
+  renderBatchResults(res, statusEl) {
+    if (!statusEl) return;
+    const processed = res.processed || [];
+    const errors = res.errors || [];
+
+    let html = `<div style="background: var(--surface); border: 1px solid var(--border); padding: 1.25rem; border-radius: 0.75rem; margin-top: 1rem;">`;
+    html += `<h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; font-weight: 600;">📊 Import Summary</h4>`;
+
+    if (processed.length > 0) {
+      html += `<div style="margin-bottom: 0.75rem;"><strong style="color: var(--success);">✅ Successfully Imported (${processed.length}):</strong><ul style="margin: 0.35rem 0 0 1.2rem; font-size: 0.85rem; color: var(--text);">`;
+      processed.forEach(p => {
+        html += `<li>${p.title}</li>`;
+      });
+      html += `</ul></div>`;
+    }
+
+    if (errors.length > 0) {
+      html += `<div><strong style="color: #f87171;">⚠️ Errors (${errors.length}):</strong><ul style="margin: 0.35rem 0 0 1.2rem; font-size: 0.85rem; color: #f87171;">`;
+      errors.forEach(e => {
+        html += `<li><strong>${e.file}</strong>: ${e.error}</li>`;
+      });
+      html += `</ul></div>`;
+    }
+
+    if (processed.length === 0 && errors.length === 0) {
+      html += `<p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">No PDFs were found or processed.</p>`;
+    }
+
+    html += `</div>`;
+    statusEl.innerHTML = html;
+  },
+
   async handleBatchUpload(e) {
     e.preventDefault();
     const input = document.getElementById('batch-pdf-files');
+    const statusEl = document.getElementById('batch-import-status');
     if (!input.files || input.files.length === 0) return;
 
+    const fileCount = input.files.length;
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const origText = submitBtn.textContent;
     submitBtn.textContent = 'Processing...';
     submitBtn.disabled = true;
+
+    if (statusEl) {
+      statusEl.innerHTML = `
+        <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); padding: 1rem; border-radius: 0.75rem; color: var(--text);">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 0.35rem;">
+            <span>⏳ Processing ${fileCount} PDF file(s)...</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Please keep this window open. Files are paced 4 seconds apart to comply with API rate limits.</p>
+        </div>
+      `;
+    }
 
     const formData = new FormData();
     for (const f of input.files) {
@@ -291,12 +347,23 @@ const RecipesView = {
 
     try {
       const res = await api.recipes.batchImportPdf(formData);
-      Toast.show(`Successfully imported ${res.processed.length} PDF recipe(s)!`, 'success');
-      this.closeBatchModal();
+      this.renderBatchResults(res, statusEl);
       input.value = '';
+      if (res.processed && res.processed.length > 0) {
+        Toast.show(`Imported ${res.processed.length} PDF recipe(s)!`, 'success');
+      } else {
+        Toast.show('Batch upload completed with errors', 'warning');
+      }
       await this.loadRecipes();
     } catch (err) {
-      Toast.show('Batch upload failed');
+      if (statusEl) {
+        statusEl.innerHTML = `
+          <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); padding: 1rem; border-radius: 0.75rem; color: #f87171;">
+            ❌ <strong>Batch Upload Failed:</strong> ${err.message || 'Network error'}
+          </div>
+        `;
+      }
+      Toast.show(err.message || 'Batch upload failed', 'danger');
     } finally {
       submitBtn.textContent = origText;
       submitBtn.disabled = false;
@@ -307,24 +374,43 @@ const RecipesView = {
     e.preventDefault();
     const input = document.getElementById('batch-folder-path');
     const folderPath = input.value.trim();
+    const statusEl = document.getElementById('batch-import-status');
 
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const origText = submitBtn.textContent;
     submitBtn.textContent = 'Scanning...';
     submitBtn.disabled = true;
 
+    if (statusEl) {
+      statusEl.innerHTML = `
+        <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); padding: 1rem; border-radius: 0.75rem; color: var(--text);">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 0.35rem;">
+            <span>⏳ Scanning directory and parsing PDFs...</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Pacing requests 4 seconds apart to respect API rate limits.</p>
+        </div>
+      `;
+    }
+
     try {
       const res = await api.recipes.batchImportFolder(folderPath);
+      this.renderBatchResults(res, statusEl);
+      input.value = '';
       if (res.processed && res.processed.length > 0) {
-        Toast.show(`Successfully converted ${res.processed.length} PDF(s) from folder!`, 'success');
-        this.closeBatchModal();
-        input.value = '';
-        await this.loadRecipes();
+        Toast.show(`Converted ${res.processed.length} PDF(s) from folder!`, 'success');
       } else {
         Toast.show(res.message || 'No new PDFs processed.', 'info');
       }
+      await this.loadRecipes();
     } catch (err) {
-      Toast.show(err.message || 'Folder scan failed');
+      if (statusEl) {
+        statusEl.innerHTML = `
+          <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); padding: 1rem; border-radius: 0.75rem; color: #f87171;">
+            ❌ <strong>Folder Scan Failed:</strong> ${err.message || 'Directory error'}
+          </div>
+        `;
+      }
+      Toast.show(err.message || 'Folder scan failed', 'danger');
     } finally {
       submitBtn.textContent = origText;
       submitBtn.disabled = false;
@@ -333,6 +419,8 @@ const RecipesView = {
 
   openImportModal() {
     const modal = document.getElementById('import-modal');
+    const statusEl = document.getElementById('single-import-status');
+    if (statusEl) statusEl.innerHTML = '';
     if (modal) modal.classList.add('open');
   },
 
@@ -345,20 +433,32 @@ const RecipesView = {
     e.preventDefault();
     const urlInput = document.getElementById('import-url');
     const url = urlInput.value;
+    const statusEl = document.getElementById('single-import-status');
     const submitBtn = e.target.querySelector('button[type="submit"]');
     
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Importing...';
     submitBtn.disabled = true;
 
+    if (statusEl) {
+      statusEl.innerHTML = `<p style="color: var(--accent-cyan); font-size: 0.85rem; margin: 0.5rem 0 0 0;">⏳ Fetching webpage and extracting recipe with AI...</p>`;
+    }
+
     try {
       const recipe = await api.recipes.importLink(url);
       Toast.show(`Imported: ${recipe.title}`, 'success');
       urlInput.value = '';
-      this.closeImportModal();
+      if (statusEl) statusEl.innerHTML = `<p style="color: var(--success); font-size: 0.85rem; margin: 0.5rem 0 0 0;">✅ Imported: <strong>${recipe.title}</strong></p>`;
+      setTimeout(() => {
+        this.closeImportModal();
+        if (statusEl) statusEl.innerHTML = '';
+      }, 1500);
       await this.loadRecipes();
     } catch (err) {
-      Toast.show('Failed to import recipe');
+      if (statusEl) {
+        statusEl.innerHTML = `<p style="color: #f87171; font-size: 0.85rem; margin: 0.5rem 0 0 0;">❌ <strong>Import Failed:</strong> ${err.message || 'Check URL and try again'}</p>`;
+      }
+      Toast.show(err.message || 'Failed to import recipe', 'danger');
     } finally {
       submitBtn.textContent = originalText;
       submitBtn.disabled = false;
@@ -369,12 +469,17 @@ const RecipesView = {
     e.preventDefault();
     const fileInput = document.getElementById('import-pdf-file');
     const file = fileInput.files[0];
+    const statusEl = document.getElementById('single-import-status');
     if (!file) return;
 
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Uploading...';
     submitBtn.disabled = true;
+
+    if (statusEl) {
+      statusEl.innerHTML = `<p style="color: var(--accent-cyan); font-size: 0.85rem; margin: 0.5rem 0 0 0;">⏳ Uploading PDF and parsing text with AI...</p>`;
+    }
 
     const formData = new FormData();
     formData.append('pdf', file);
@@ -383,10 +488,17 @@ const RecipesView = {
       const recipe = await api.recipes.importPdf(formData);
       Toast.show(`Uploaded & Parsed: ${recipe.title}`, 'success');
       fileInput.value = '';
-      this.closeImportModal();
+      if (statusEl) statusEl.innerHTML = `<p style="color: var(--success); font-size: 0.85rem; margin: 0.5rem 0 0 0;">✅ Parsed: <strong>${recipe.title}</strong></p>`;
+      setTimeout(() => {
+        this.closeImportModal();
+        if (statusEl) statusEl.innerHTML = '';
+      }, 1500);
       await this.loadRecipes();
     } catch (err) {
-      Toast.show('Failed to import PDF');
+      if (statusEl) {
+        statusEl.innerHTML = `<p style="color: #f87171; font-size: 0.85rem; margin: 0.5rem 0 0 0;">❌ <strong>Upload Failed:</strong> ${err.message || 'Invalid PDF or rate limit'}</p>`;
+      }
+      Toast.show(err.message || 'Failed to import PDF', 'danger');
     } finally {
       submitBtn.textContent = originalText;
       submitBtn.disabled = false;
