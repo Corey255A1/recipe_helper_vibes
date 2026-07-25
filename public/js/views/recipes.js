@@ -11,39 +11,61 @@ const RecipesView = {
     const isGrid = this.state.viewMode === 'grid';
     return `
       <div class="view" id="recipes-view">
-        <!-- Control Panel -->
-        <div class="library-control-panel">
-          <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-            
-            <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; min-width: 320px; flex-wrap: wrap;">
-              <input type="text" id="recipe-library-search" placeholder="🔍 Search recipes..." oninput="RecipesView.handleSearch(this.value)" style="margin-bottom: 0; flex: 1; min-width: 150px; padding: 0.65rem 1rem;">
-              
-              <select id="recipe-library-sort" onchange="RecipesView.handleSort(this.value)" style="margin-bottom: 0; width: auto; padding: 0.65rem 1rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.9rem;">
-                <option value="recent" selected>Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="title">A - Z</option>
-              </select>
-              
-              <select id="recipe-tag-cloud-select" onchange="RecipesView.selectTag(this.value)" style="margin-bottom: 0; width: auto; padding: 0.65rem 1rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.9rem;">
-                <option value="">Tag: All</option>
-              </select>
-            </div>
-            
-            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-              <button class="btn btn-outline" style="padding: 0.55rem 0.85rem; font-size: 0.85rem;" onclick="RecipesView.openBatchModal()">📂 Batch Import</button>
-              <button class="btn" style="padding: 0.55rem 0.85rem; font-size: 0.85rem;" onclick="RecipesView.openImportModal()">🔗 Import URL/PDF</button>
-              
-              <div style="display: flex; gap: 0.2rem; background: var(--bg); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border); margin-left: 0.25rem;">
-                <button id="recipes-view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.65rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲</button>
-                <button id="recipes-view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.65rem; font-size: 0.85rem; border-radius: 0.35rem;">☰</button>
-              </div>
-            </div>
-            
+        <!-- Library Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <h2 style="margin: 0; font-size: 1.65rem;">📖 Recipe Library</h2>
+            <span id="recipe-library-count-badge" style="font-size: 0.85rem; font-weight: 600; background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); padding: 0.2rem 0.65rem; border-radius: 1rem;">
+              0 recipes
+            </span>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <button class="btn btn-outline" style="padding: 0.55rem 0.9rem; font-size: 0.85rem;" onclick="RecipesView.openBatchModal()">📂 Batch Import</button>
+            <button class="btn" style="padding: 0.55rem 0.9rem; font-size: 0.85rem;" onclick="RecipesView.openImportModal()">🔗 Import URL/PDF</button>
           </div>
         </div>
 
+        <!-- Static Search & Filter Control Panel -->
+        <div class="library-control-panel">
+          <div style="display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            
+            <!-- Search Bar -->
+            <div style="position: relative; flex: 1; min-width: 250px;">
+              <input type="text" id="recipe-library-search" placeholder="🔍 Search recipes by title, tag, or ingredient..." oninput="RecipesView.handleSearch(this.value)" style="width: 100%; margin-bottom: 0; padding: 0.65rem 2.2rem 0.65rem 1rem; font-size: 0.9rem;">
+              <button id="recipe-search-clear-btn" onclick="RecipesView.clearSearch()" style="display: none; position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem;" title="Clear Search">✕</button>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <select id="recipe-library-sort" onchange="RecipesView.handleSort(this.value)" style="margin-bottom: 0; width: auto; padding: 0.65rem 0.85rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem;">
+              <option value="recent" selected>Sort: Newest</option>
+              <option value="oldest">Sort: Oldest</option>
+              <option value="title">Sort: A - Z</option>
+            </select>
+
+            <!-- Tag Select Dropdown -->
+            <select id="recipe-tag-cloud-select" onchange="RecipesView.selectTag(this.value)" style="margin-bottom: 0; width: auto; padding: 0.65rem 0.85rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem;">
+              <option value="">Tag: All</option>
+            </select>
+
+            <!-- View Switcher -->
+            <div style="display: flex; gap: 0.2rem; background: var(--bg); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+              <button id="recipes-view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.65rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲</button>
+              <button id="recipes-view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.65rem; font-size: 0.85rem; border-radius: 0.35rem;">☰</button>
+            </div>
+
+          </div>
+
+          <!-- Quick Tag Chips Bar -->
+          <div id="recipe-tag-chips-container" style="display: flex; gap: 0.4rem; overflow-x: auto; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.06); scrollbar-width: none;">
+          </div>
+        </div>
+
+        <!-- Filter Status Bar -->
+        <div id="recipe-filter-status-bar" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;"></div>
+
         <!-- Recipe Content Grid -->
-        <div id="recipes-library-content" style="flex: 1; overflow-y: auto; padding-right: 0.5rem; padding-bottom: 2rem;">
+        <div id="recipes-library-content" style="flex: 1; padding-bottom: 2rem;">
           ${Loader.render('Loading recipe library...')}
         </div>
 
@@ -137,7 +159,13 @@ const RecipesView = {
 
   renderTagCloud() {
     const selectEl = document.getElementById('recipe-tag-cloud-select');
-    if (!selectEl || !this.state.recipes) return;
+    const chipsContainer = document.getElementById('recipe-tag-chips-container');
+    const countBadge = document.getElementById('recipe-library-count-badge');
+
+    const totalCount = (this.state.recipes || []).length;
+    if (countBadge) countBadge.innerText = `${totalCount} ${totalCount === 1 ? 'recipe' : 'recipes'}`;
+
+    if (!this.state.recipes) return;
 
     // Collect all unique tags
     const tagCounts = {};
@@ -150,15 +178,38 @@ const RecipesView = {
 
     const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
 
-    let html = `<option value="">Filter Tag: All (${this.state.recipes.length})</option>`;
+    if (selectEl) {
+      let selectHtml = `<option value="">Tag: All (${totalCount})</option>`;
+      sortedTags.forEach(tag => {
+        const isSelected = this.state.selectedTag === tag ? 'selected' : '';
+        const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1);
+        selectHtml += `<option value="${tag}" ${isSelected}>${capitalized} (${tagCounts[tag]})</option>`;
+      });
+      selectEl.innerHTML = selectHtml;
+    }
 
-    sortedTags.forEach(tag => {
-      const isSelected = this.state.selectedTag === tag ? 'selected' : '';
-      const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1);
-      html += `<option value="${tag}" ${isSelected}>${capitalized} (${tagCounts[tag]})</option>`;
-    });
+    if (chipsContainer) {
+      let chipsHtml = `
+        <button class="btn btn-sm ${this.state.selectedTag === '' ? '' : 'btn-outline'}" 
+                style="border-radius: 1rem; padding: 0.25rem 0.75rem; font-size: 0.8rem; white-space: nowrap;"
+                onclick="RecipesView.selectTag('')">
+          All (${totalCount})
+        </button>
+      `;
 
-    selectEl.innerHTML = html;
+      sortedTags.slice(0, 12).forEach(tag => {
+        const isSelected = this.state.selectedTag === tag;
+        const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1);
+        chipsHtml += `
+          <button class="btn btn-sm ${isSelected ? '' : 'btn-outline'}" 
+                  style="border-radius: 1rem; padding: 0.25rem 0.75rem; font-size: 0.8rem; white-space: nowrap;"
+                  onclick="RecipesView.selectTag('${tag}')">
+            ${capitalized} (${tagCounts[tag]})
+          </button>
+        `;
+      });
+      chipsContainer.innerHTML = chipsHtml;
+    }
   },
 
   selectTag(tag) {
@@ -169,6 +220,26 @@ const RecipesView = {
 
   handleSearch(query) {
     this.state.searchQuery = query.toLowerCase();
+    this.filterAndRender();
+  },
+
+  clearSearch() {
+    this.state.searchQuery = '';
+    const input = document.getElementById('recipe-library-search');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('recipe-search-clear-btn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    this.filterAndRender();
+  },
+
+  clearAllFilters() {
+    this.state.searchQuery = '';
+    this.state.selectedTag = '';
+    const input = document.getElementById('recipe-library-search');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('recipe-search-clear-btn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    this.renderTagCloud();
     this.filterAndRender();
   },
 
@@ -185,11 +256,16 @@ const RecipesView = {
 
   filterAndRender() {
     const content = document.getElementById('recipes-library-content');
+    const statusBar = document.getElementById('recipe-filter-status-bar');
+    const clearBtn = document.getElementById('recipe-search-clear-btn');
+
     if (!content || !this.state.recipes) return;
 
     const query = this.state.searchQuery;
     const tag = this.state.selectedTag;
     const sort = this.state.sortMode;
+
+    if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
 
     let filtered = this.state.recipes.filter(r => {
       const matchesQuery = !query || 
@@ -204,10 +280,28 @@ const RecipesView = {
 
     Utils.sortRecipes(filtered, sort);
 
+    if (statusBar) {
+      if (query || tag) {
+        let filterLabels = [];
+        if (query) filterLabels.push(`search "${query}"`);
+        if (tag) filterLabels.push(`tag "${tag.charAt(0).toUpperCase() + tag.slice(1)}"`);
+
+        statusBar.innerHTML = `
+          <span style="color: var(--text-secondary); font-size: 0.875rem;">Showing <strong>${filtered.length}</strong> of ${this.state.recipes.length} recipes (filtered by ${filterLabels.join(' & ')})</span>
+          <button class="btn btn-outline btn-sm" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-color: rgba(239,68,68,0.4); color: #f87171;" onclick="RecipesView.clearAllFilters()">Clear Filters ✕</button>
+        `;
+      } else {
+        statusBar.innerHTML = `<span style="color: var(--text-muted); font-size: 0.85rem;">Showing all ${filtered.length} saved recipes</span>`;
+      }
+    }
+
     if (filtered.length === 0) {
       content.innerHTML = `
-        <div style="background: var(--surface); padding: 3rem; border-radius: 1.25rem; border: 1px solid var(--border); text-align: center;">
-          <p style="color: var(--text-muted); font-size: 1rem; margin: 0;">No recipes found matching your filters.</p>
+        <div style="background: var(--surface); padding: 3.5rem 2rem; border-radius: 1.25rem; border: 1px solid var(--border); text-align: center; margin-top: 1rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+          <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--text);">No recipes found</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">No saved recipes matched your current search or tag filters.</p>
+          <button class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="RecipesView.clearAllFilters()">Reset Filters & Show All</button>
         </div>
       `;
       return;
