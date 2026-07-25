@@ -56,28 +56,51 @@ const grocerySchema = {
 
 
 class GeminiService {
-  async getModel() {
+  async getModel(overrideModel) {
     let apiKey = process.env.GEMINI_API_KEY || config.geminiApiKey;
-    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+    let selectedModel = overrideModel || process.env.GEMINI_MODEL;
+
+    if (!apiKey || apiKey === 'your_gemini_api_key_here' || !selectedModel) {
       try {
         const contextData = await fs.readFile(config.dataPaths.context, 'utf-8');
         const context = JSON.parse(contextData);
-        if (context.geminiApiKey && context.geminiApiKey !== 'your_gemini_api_key_here') {
-          apiKey = context.geminiApiKey;
+        if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+          if (context.geminiApiKey && context.geminiApiKey !== 'your_gemini_api_key_here') {
+            apiKey = context.geminiApiKey;
+          }
+        }
+        if (!selectedModel && context.geminiModel) {
+          selectedModel = context.geminiModel;
         }
       } catch (e) {}
     }
 
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-      throw new Error('Gemini API key is not configured. Please set the GEMINI_API_KEY environment variable or save it in the app preferences.');
+      throw new Error('Gemini API key is not configured. Please set GEMINI_API_KEY environment variable or save it in app settings.');
     }
 
+    const modelName = selectedModel || "gemini-1.5-flash";
     const genAI = new GoogleGenerativeAI(apiKey);
-    return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    return { model: genAI.getGenerativeModel({ model: modelName }), modelName };
+  }
+
+  async generateContentWithFallback(requestData) {
+    let { model, modelName } = await this.getModel();
+    try {
+      return await model.generateContent(requestData);
+    } catch (error) {
+      const msg = (error.message || '').toLowerCase();
+      // If primary model failed due to quota limit or unsupported free tier model, fallback to gemini-1.5-flash
+      if (modelName !== 'gemini-1.5-flash' && (msg.includes('quota') || msg.includes('limit') || msg.includes('429'))) {
+        console.warn(`[GEMINI] Model ${modelName} failed with quota/limit error. Retrying with gemini-1.5-flash...`);
+        const { model: fallbackModel } = await this.getModel('gemini-1.5-flash');
+        return await fallbackModel.generateContent(requestData);
+      }
+      throw error;
+    }
   }
 
   async generateSuggestions(context, history, cacheSummaries, neededMeals, mealType = '') {
-    const model = await this.getModel();
     const mealTypeContext = mealType ? `\nFocus EXCLUSIVELY on suggestions for: ${mealType}.` : '';
     
     const prompt = `
@@ -98,7 +121,7 @@ For new recipes, provide a source URL if possible, or indicate "web". For cached
 Return the response as a JSON array matching the schema.
     `;
 
-    const result = await model.generateContent({
+    const result = await this.generateContentWithFallback({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         responseMimeType: "application/json",
@@ -111,7 +134,6 @@ Return the response as a JSON array matching the schema.
   }
 
   async generateGroceryList(recipes, context) {
-    const model = await this.getModel();
     const prompt = `
 You are an expert at combining grocery lists.
 Here are the recipes the user selected for the week:
@@ -124,7 +146,7 @@ Adjust quantities if needed based on the user's context (they need ${context.ser
 Return a JSON object matching the schema.
     `;
 
-    const result = await model.generateContent({
+    const result = await this.generateContentWithFallback({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         responseMimeType: "application/json",
@@ -137,7 +159,6 @@ Return a JSON object matching the schema.
   }
 
   async extractRecipeFromText(text, source) {
-    const model = await this.getModel();
     const prompt = `
 You are an expert recipe parser.
 Below is text extracted from a recipe webpage or document. Extract the recipe details and format them as a single JSON object.
@@ -149,7 +170,7 @@ Text:
 ${text}
     `;
 
-    const result = await model.generateContent({
+    const result = await this.generateContentWithFallback({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         responseMimeType: "application/json",
@@ -161,7 +182,6 @@ ${text}
   }
 
   async extractRecipeFromPdf(pdfBuffer, source) {
-    const model = await this.getModel();
     const prompt = `
 You are an expert recipe parser.
 Below is an uploaded PDF recipe document (which may contain text or scanned images). Extract the recipe details and format them as a single JSON object.
@@ -170,7 +190,7 @@ Generate a clean, kebab-case id based on the title (e.g. "chicken-tikka-masala")
 If cook time, prep time, or servings are not explicitly mentioned, estimate it based on the directions or use default estimates.
     `;
 
-    const result = await model.generateContent({
+    const result = await this.generateContentWithFallback({
       contents: [
         {
           role: "user",
