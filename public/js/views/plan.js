@@ -366,7 +366,7 @@ const PlanView = {
               const assignedDaysStr = (meal.assignedDays && meal.assignedDays.length > 0) 
                 ? meal.assignedDays.join(', ') 
                 : 'Unassigned';
-              const cleanTitle = meal.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+              const cleanTitle = meal.title || meal.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
               return `
                 <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 1rem; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: space-between;">
@@ -537,7 +537,8 @@ const PlanView = {
           if (m.assignedDays) {
             m.assignedDays.forEach(day => {
               if (dailyMeals[day]) {
-                dailyMeals[day].push(m.recipeId.replace(/-/g, ' '));
+                const name = m.title || m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                dailyMeals[day].push(name);
               }
             });
           }
