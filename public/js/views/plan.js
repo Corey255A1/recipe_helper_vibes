@@ -274,7 +274,7 @@ const PlanView = {
                         <span class="meal-row-servings">🍽️ ${m.servings} servings</span>
                         <div class="meal-row-actions">
                           <button onclick="PlanView.editMealDays('${m.recipeId}', '${plan.weekOf}')" title="Reassign meal days" class="action-btn action-btn-edit">✏️ Edit</button>
-                          <button onclick="PlanView.removeMeal('${m.recipeId}', '${plan.weekOf}', '${d}')" title="Remove ${cleanTitle} from ${d}" class="btn-remove-meal">🗑️ Remove</button>
+                          <button onclick="PlanView.removeMeal('${m.recipeId}', '${plan.weekOf}', '${day}')" title="Remove ${cleanTitle} from ${day}" class="btn-remove-meal">🗑️ Remove</button>
                         </div>
                       </div>
                     </div>
