@@ -21,6 +21,9 @@ const RecipeCard = {
         domain = new URL(recipe.source).hostname.replace('www.', '');
       } catch(e) {}
       sourceBadgeHtml = `<span class="source-badge web"><a href="${recipe.source}" target="_blank" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none;">🌐 ${domain} ↗</a></span>`;
+    } else if (recipe.source === 'web' || isSuggestion) {
+      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(recipe.title + ' recipe')}`;
+      sourceBadgeHtml = `<span class="source-badge web"><a href="${searchUrl}" target="_blank" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none;">🌐 Web Search ↗</a></span>`;
     } else {
       sourceBadgeHtml = `<span class="source-badge saved">💾 Saved</span>`;
     }
@@ -58,7 +61,25 @@ const RecipeCard = {
   
   async openModal(id) {
     try {
-      const recipe = await api.recipes.get(id);
+      let recipe = null;
+      
+      // 1. Check in-memory AI suggestions first
+      if (window.PlanView && PlanView.state && PlanView.state.suggestions) {
+        recipe = PlanView.state.suggestions.find(s => s.id === id);
+      }
+
+      // 2. Fetch from saved library cache
+      if (!recipe) {
+        try {
+          recipe = await api.recipes.get(id);
+        } catch(e) {}
+      }
+
+      if (!recipe) {
+        Toast.show('Recipe details not found.', 'danger');
+        return;
+      }
+
       const modal = document.getElementById('recipe-modal');
       const content = document.getElementById('recipe-modal-content');
 
@@ -73,6 +94,9 @@ const RecipeCard = {
           domain = new URL(recipe.source).hostname.replace('www.', '');
         } catch(e) {}
         sourceLinkHtml = `<a href="${recipe.source}" target="_blank" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem; color: var(--accent-cyan); border-color: var(--accent-cyan);">🌐 View Recipe on ${domain} ↗</a>`;
+      } else if (recipe.title) {
+        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(recipe.title + ' recipe')}`;
+        sourceLinkHtml = `<a href="${searchUrl}" target="_blank" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem; color: var(--accent-cyan); border-color: var(--accent-cyan);">🌐 Search Recipe on Web ↗</a>`;
       }
 
       content.innerHTML = `
