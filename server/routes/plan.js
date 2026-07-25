@@ -261,10 +261,20 @@ router.put('/meals/:recipeId/days', async (req, res, next) => {
 router.delete('/meals/:recipeId', async (req, res, next) => {
   try {
     const weekOf = req.query.weekOf;
+    const dayToRemove = req.query.day;
     const { plans, targetWeek } = await getPlansAndTargetWeek(weekOf);
     if (!targetWeek) return res.status(404).json({ error: "Week not found." });
 
-    targetWeek.meals = targetWeek.meals.filter(m => m.recipeId !== req.params.recipeId);
+    const mealIndex = targetWeek.meals.findIndex(m => m.recipeId === req.params.recipeId);
+    if (mealIndex !== -1) {
+      const meal = targetWeek.meals[mealIndex];
+      if (dayToRemove && meal.assignedDays && meal.assignedDays.length > 1) {
+        meal.assignedDays = meal.assignedDays.filter(d => d !== dayToRemove);
+      } else {
+        targetWeek.meals.splice(mealIndex, 1);
+      }
+    }
+    
     await savePlans(plans);
     res.json(targetWeek);
   } catch (error) {

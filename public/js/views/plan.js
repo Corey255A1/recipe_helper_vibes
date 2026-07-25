@@ -272,7 +272,7 @@ const PlanView = {
                         <span class="meal-row-servings">🍽️ ${m.servings} servings</span>
                         <div class="meal-row-actions">
                           <button onclick="PlanView.editMealDays('${m.recipeId}', '${plan.weekOf}')" title="Reassign meal days" class="action-btn action-btn-edit">✏️ Edit</button>
-                          <button onclick="PlanView.removeMeal('${m.recipeId}', '${plan.weekOf}')" title="Remove ${cleanTitle}" class="btn-remove-meal">🗑️ Remove</button>
+                          <button onclick="PlanView.removeMeal('${m.recipeId}', '${plan.weekOf}', '${d}')" title="Remove ${cleanTitle} from ${d}" class="btn-remove-meal">🗑️ Remove</button>
                         </div>
                       </div>
                     </div>
@@ -624,10 +624,10 @@ const PlanView = {
     }
   },
 
-  async removeMeal(recipeId, weekOf) {
+  async removeMeal(recipeId, weekOf, day = null) {
     try {
-      await api.plan.removeMeal(recipeId, weekOf);
-      Toast.show('Meal removed from plan.', 'success');
+      await api.plan.removeMeal(recipeId, weekOf, day);
+      Toast.show(day ? `Meal removed from ${day}.` : 'Meal removed from plan.', 'success');
       this.state.plans = await api.plan.plans();
       await this.refresh();
     } catch (e) {

@@ -30,7 +30,13 @@ const api = {
     decide: (decisions, weekOf) => api.request('/plan/decide', { method: 'POST', body: { decisions, weekOf } }),
     updateMealDays: (recipeId, assignedDays, mealType, weekOf) => api.request(`/plan/meals/${recipeId}/days`, { method: 'PUT', body: { assignedDays, mealType, weekOf } }),
     rollover: () => api.request('/plan/rollover', { method: 'POST' }),
-    removeMeal: (recipeId, weekOf) => api.request(`/plan/meals/${recipeId}${weekOf ? `?weekOf=${weekOf}` : ''}`, { method: 'DELETE' })
+    removeMeal: (recipeId, weekOf, day) => {
+      const params = new URLSearchParams();
+      if (weekOf) params.append('weekOf', weekOf);
+      if (day) params.append('day', day);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      return api.request(`/plan/meals/${recipeId}${query}`, { method: 'DELETE' });
+    }
   },
 
   grocery: {
