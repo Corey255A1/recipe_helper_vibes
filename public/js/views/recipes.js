@@ -232,18 +232,14 @@ const RecipesView = {
   async addToPlan(recipeId) {
     if (window.PlanView) {
       if (!PlanView.state.plans || PlanView.state.plans.length === 0) {
-        await PlanView.init();
+        try {
+          PlanView.state.plans = await api.plan.plans();
+        } catch(e) {}
       }
       PlanView.activeRecipeId = recipeId;
       
-      // Navigate to plan view
-      if (window.App) {
-        App.navigate('plan');
-        history.pushState({ route: 'plan' }, '', '#plan');
-      }
-      
-      const targetWeek = PlanView.getActiveWeekOf ? PlanView.getActiveWeekOf() : PlanView.state.expandedWeekOf;
-      PlanView.openDayModal([], 'Dinner', targetWeek);
+      const targetWeek = PlanView.getActiveWeekOf ? PlanView.getActiveWeekOf() : null;
+      await PlanView.openDayModal([], 'Dinner', targetWeek);
     } else {
       Toast.show('Recipe selected for plan', 'info');
     }

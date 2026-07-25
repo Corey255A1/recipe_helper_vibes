@@ -37,7 +37,12 @@
         <div class="modal-card">
             <h3>Assign Days for this Meal</h3>
             <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">Select the day(s) you plan to eat this meal. Multi-day selection works great for leftovers!</p>
-            
+            <div id="day-modal-week-group" style="margin-bottom: 1.25rem;">
+                <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Target Week</h4>
+                <select id="day-modal-week-select" style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.9rem;" onchange="PlanView.onDayModalWeekChange(this.value)">
+                </select>
+            </div>
+
             <div class="meal-type-selector" style="margin-bottom: 1.5rem;">
                 <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Meal Type</h4>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="meal-type-radios">

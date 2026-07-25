@@ -461,9 +461,24 @@ const PlanView = {
   },
 
   async openDayModal(preselectedDays = [], mealType = 'Dinner', weekOf = null) {
-    this.activeModalWeekOf = weekOf;
+    if (!this.state.plans || this.state.plans.length === 0) {
+      try {
+        this.state.plans = await api.plan.plans();
+      } catch(e) {}
+    }
+
+    this.activeModalWeekOf = weekOf || (this.state.plans && this.state.plans.length > 0 ? this.state.plans[0].weekOf : null);
     const modal = document.getElementById('day-modal');
     modal.classList.add('open');
+
+    // Populate week selector dropdown
+    const weekSelect = document.getElementById('day-modal-week-select');
+    if (weekSelect && this.state.plans && this.state.plans.length > 0) {
+      weekSelect.innerHTML = this.state.plans.map(p => {
+        const label = this.formatWeekRange ? this.formatWeekRange(p.weekOf) : `Week of ${p.weekOf}`;
+        return `<option value="${p.weekOf}" ${p.weekOf === this.activeModalWeekOf ? 'selected' : ''}>Week of ${label}</option>`;
+      }).join('');
+    }
     
     modal.querySelectorAll('input[type="checkbox"]').forEach(cb => {
       cb.checked = preselectedDays.includes(cb.value);
@@ -472,8 +487,20 @@ const PlanView = {
     const radioChecked = modal.querySelector(`input[name="mealType"][value="${mealType}"]`);
     if (radioChecked) radioChecked.checked = true;
 
+    this.updateDayModalPreviews(this.activeModalWeekOf);
+  },
+
+  onDayModalWeekChange(newWeekOf) {
+    this.activeModalWeekOf = newWeekOf;
+    this.updateDayModalPreviews(newWeekOf);
+  },
+
+  updateDayModalPreviews(weekOf) {
+    const modal = document.getElementById('day-modal');
+    if (!modal) return;
+
     try {
-      const plan = this.state.plans.find(p => p.weekOf === weekOf) || this.state.plans[0];
+      const plan = (this.state.plans || []).find(p => p.weekOf === weekOf) || (this.state.plans ? this.state.plans[0] : null);
       const dailyMeals = {};
       const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       daysOfWeek.forEach(d => dailyMeals[d] = []);
