@@ -14,9 +14,13 @@ const RecipeCard = {
 
     let sourceBadgeHtml = '';
     if (recipe.pdfPath) {
-      sourceBadgeHtml = `<span class="source-badge pdf"><a href="${recipe.pdfPath}" target="_blank" style="color: inherit; text-decoration: none;">📄 PDF</a></span>`;
+      sourceBadgeHtml = `<span class="source-badge pdf"><a href="${recipe.pdfPath}" target="_blank" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none;">📄 PDF</a></span>`;
     } else if (recipe.source && (recipe.source.startsWith('http://') || recipe.source.startsWith('https://'))) {
-      sourceBadgeHtml = `<span class="source-badge web"><a href="${recipe.source}" target="_blank" style="color: inherit; text-decoration: none;">🌐 Web Recipe</a></span>`;
+      let domain = 'Web';
+      try {
+        domain = new URL(recipe.source).hostname.replace('www.', '');
+      } catch(e) {}
+      sourceBadgeHtml = `<span class="source-badge web"><a href="${recipe.source}" target="_blank" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none;">🌐 ${domain} ↗</a></span>`;
     } else {
       sourceBadgeHtml = `<span class="source-badge saved">💾 Saved</span>`;
     }
@@ -64,7 +68,11 @@ const RecipeCard = {
       if (recipe.pdfPath) {
         sourceLinkHtml = `<a href="${recipe.pdfPath}" target="_blank" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">📄 Open Original PDF</a>`;
       } else if (recipe.source && (recipe.source.startsWith('http://') || recipe.source.startsWith('https://'))) {
-        sourceLinkHtml = `<a href="${recipe.source}" target="_blank" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">🌐 View Original Source</a>`;
+        let domain = 'Original Source';
+        try {
+          domain = new URL(recipe.source).hostname.replace('www.', '');
+        } catch(e) {}
+        sourceLinkHtml = `<a href="${recipe.source}" target="_blank" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem; color: var(--accent-cyan); border-color: var(--accent-cyan);">🌐 View Recipe on ${domain} ↗</a>`;
       }
 
       content.innerHTML = `

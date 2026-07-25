@@ -163,12 +163,12 @@ ${JSON.stringify(history)}
 Here is a summary of their existing recipe cache (${cachedCount} saved recipes):
 ${JSON.stringify(cacheSummaries)}
 
-RECIPE SELECTION RATIO INSTRUCTIONS:
+RECIPE SELECTION RATIO & SOURCE URL INSTRUCTIONS:
 - You must provide up to 10 total recipe suggestions.
 - If there are enough cached recipes available (at least 7), select exactly ${cacheTarget} recipes from their existing cache and ${webTarget} new recipes from the web.
 - Otherwise, use all available cached recipes (${cacheTarget}) and fill the remaining spots (${webTarget}) with new recipes from the web to reach 10 total suggestions.
-- For recipes from their cache, set "source": "cache".
-- For new web recipes, provide a full valid source URL or "web".
+- FOR NEW WEB RECIPES: You MUST provide a real, valid, full HTTP or HTTPS source URL for where the recipe originated (e.g., "https://www.allrecipes.com/recipe/...", "https://www.bonappetit.com/recipe/...", "https://www.foodnetwork.com/recipes/..."). NEVER output generic "web" or empty string for source.
+- FOR CACHED RECIPES: Set "source": "cache".
 
 Return the response as a JSON array matching the schema.
     `;
