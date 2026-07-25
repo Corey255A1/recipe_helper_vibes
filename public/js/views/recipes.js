@@ -3,7 +3,10 @@ const RecipesView = {
     recipes: [],
     viewMode: window.innerWidth <= 768 ? 'list' : 'grid',
     searchQuery: '',
-    selectedTag: '',
+    selectedTags: [],
+    maxTime: null,
+    draftTags: [],
+    draftMaxTime: null,
     sortMode: 'recent'
   },
 
@@ -26,15 +29,21 @@ const RecipesView = {
           </div>
         </div>
 
-        <!-- Static Search & Filter Control Panel -->
+        <!-- Static Control Panel -->
         <div class="library-control-panel">
           <div style="display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
             
             <!-- Search Bar -->
-            <div style="position: relative; flex: 1; min-width: 250px;">
+            <div style="position: relative; flex: 1; min-width: 240px;">
               <input type="text" id="recipe-library-search" placeholder="🔍 Search recipes by title, tag, or ingredient..." oninput="RecipesView.handleSearch(this.value)" style="width: 100%; margin-bottom: 0; padding: 0.65rem 2.2rem 0.65rem 1rem; font-size: 0.9rem;">
               <button id="recipe-search-clear-btn" onclick="RecipesView.clearSearch()" style="display: none; position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem;" title="Clear Search">✕</button>
             </div>
+
+            <!-- Zillow / Shopping-Style Filters Popup Button -->
+            <button id="recipe-filter-modal-trigger" class="btn btn-outline" onclick="RecipesView.openFilterModal()" style="padding: 0.65rem 1rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.45rem;" title="Open Filters Page">
+              <span>🎛️ Filters</span>
+              <span id="recipe-active-filter-badge" style="display: none; background: var(--primary); color: #fff; border-radius: 1rem; padding: 0.1rem 0.45rem; font-size: 0.75rem; font-weight: 700;">0</span>
+            </button>
 
             <!-- Sort Dropdown -->
             <select id="recipe-library-sort" onchange="RecipesView.handleSort(this.value)" style="margin-bottom: 0; width: auto; padding: 0.65rem 0.85rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem;">
@@ -50,18 +59,56 @@ const RecipesView = {
             </div>
 
           </div>
-
-          <!-- Quick Tag Chips Bar -->
-          <div id="recipe-tag-chips-container" style="display: flex; gap: 0.4rem; overflow-x: auto; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.06); scrollbar-width: none;">
-          </div>
         </div>
 
         <!-- Filter Status Bar -->
-        <div id="recipe-filter-status-bar" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;"></div>
+        <div id="recipe-filter-status-bar" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;"></div>
 
         <!-- Recipe Content Grid -->
         <div id="recipes-library-content" style="flex: 1; padding-bottom: 2rem;">
           ${Loader.render('Loading recipe library...')}
+        </div>
+
+        <!-- Zillow / Shopping-Style Filter Popup Modal Page -->
+        <div id="recipe-filter-modal" class="modal-overlay">
+          <div class="modal-card" style="max-width: 580px; width: 92%; padding: 1.5rem; border-radius: 1.25rem;">
+            
+            <!-- Modal Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem;">
+              <h3 style="margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem;">
+                🎛️ Recipe Filters
+              </h3>
+              <button class="btn btn-outline" style="padding: 0.35rem 0.65rem; font-size: 1rem; line-height: 1; border-radius: 0.5rem; color: var(--text-muted);" onclick="RecipesView.closeFilterModal()" title="Close">✕</button>
+            </div>
+
+            <!-- Modal Content / Filter Options -->
+            <div style="max-height: 60vh; overflow-y: auto; padding-right: 0.25rem; margin-bottom: 1.5rem;">
+              
+              <!-- Cooking Time Section -->
+              <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem;">⏱️ Cooking Time</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="filter-modal-time-chips">
+                </div>
+              </div>
+
+              <!-- Tag Options Section -->
+              <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem;">🏷️ Tags & Categories</h4>
+                <div id="filter-modal-tags-container" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border); gap: 1rem;">
+              <button class="btn btn-outline" style="padding: 0.6rem 1rem; font-size: 0.85rem;" onclick="RecipesView.resetModalFilters()">Reset All</button>
+              <button id="filter-modal-apply-btn" class="btn" style="padding: 0.65rem 1.5rem; font-size: 0.9rem; font-weight: 600;" onclick="RecipesView.applyFilterModal()">
+                Show Recipes
+              </button>
+            </div>
+
+          </div>
         </div>
 
         <!-- Single Import Modal -->
@@ -145,25 +192,43 @@ const RecipesView = {
     const content = document.getElementById('recipes-library-content');
     try {
       this.state.recipes = await api.recipes.list();
-      this.renderTagCloud();
+      this.updateRecipeCountBadge();
       this.filterAndRender();
     } catch (e) {
       if (content) content.innerHTML = `<p style="color: var(--danger);">Failed to load recipe library.</p>`;
     }
   },
 
-  renderTagCloud() {
-    const chipsContainer = document.getElementById('recipe-tag-chips-container');
+  updateRecipeCountBadge() {
     const countBadge = document.getElementById('recipe-library-count-badge');
-
     const totalCount = (this.state.recipes || []).length;
     if (countBadge) countBadge.innerText = `${totalCount} ${totalCount === 1 ? 'recipe' : 'recipes'}`;
+  },
 
-    if (!this.state.recipes || !chipsContainer) return;
+  openFilterModal() {
+    // Copy current state to draft
+    this.state.draftTags = [...this.state.selectedTags];
+    this.state.draftMaxTime = this.state.maxTime;
 
-    // Collect all unique tags
+    const modal = document.getElementById('recipe-filter-modal');
+    if (!modal) return;
+
+    this.renderModalFilterOptions();
+    modal.classList.add('open');
+  },
+
+  closeFilterModal() {
+    const modal = document.getElementById('recipe-filter-modal');
+    if (modal) modal.classList.remove('open');
+  },
+
+  renderModalFilterOptions() {
+    const tagsContainer = document.getElementById('filter-modal-tags-container');
+    const timeContainer = document.getElementById('filter-modal-time-chips');
+
+    // Collect tags & counts
     const tagCounts = {};
-    this.state.recipes.forEach(r => {
+    (this.state.recipes || []).forEach(r => {
       (r.tags || []).forEach(t => {
         const cleanTag = t.trim().toLowerCase();
         if (cleanTag) tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
@@ -172,33 +237,109 @@ const RecipesView = {
 
     const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
 
-    if (chipsContainer) {
-      let chipsHtml = `
-        <button class="btn btn-sm ${this.state.selectedTag === '' ? '' : 'btn-outline'}" 
-                style="border-radius: 1rem; padding: 0.25rem 0.75rem; font-size: 0.8rem; white-space: nowrap;"
-                onclick="RecipesView.selectTag('')">
-          All (${totalCount})
-        </button>
-      `;
+    // Populate Time Chips
+    if (timeContainer) {
+      const times = [
+        { label: '⚡ Under 20 mins', val: 20 },
+        { label: '⏱️ Under 30 mins', val: 30 },
+        { label: '🔥 Under 45 mins', val: 45 },
+        { label: 'Any Time', val: null }
+      ];
 
-      sortedTags.slice(0, 12).forEach(tag => {
-        const isSelected = this.state.selectedTag === tag;
+      timeContainer.innerHTML = times.map(t => {
+        const isSelected = this.state.draftMaxTime === t.val;
+        return `
+          <button type="button" class="btn btn-sm ${isSelected ? '' : 'btn-outline'}" 
+                  style="border-radius: 1rem; padding: 0.35rem 0.85rem; font-size: 0.85rem;"
+                  onclick="RecipesView.setModalMaxTime(${t.val})">
+            ${t.label}
+          </button>
+        `;
+      }).join('');
+    }
+
+    // Populate Tag Chips (Multi-Select)
+    if (tagsContainer) {
+      tagsContainer.innerHTML = sortedTags.map(tag => {
+        const isSelected = this.state.draftTags.includes(tag);
         const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1);
-        chipsHtml += `
-          <button class="btn btn-sm ${isSelected ? '' : 'btn-outline'}" 
-                  style="border-radius: 1rem; padding: 0.25rem 0.75rem; font-size: 0.8rem; white-space: nowrap;"
-                  onclick="RecipesView.selectTag('${tag}')">
+        return `
+          <button type="button" class="btn btn-sm ${isSelected ? '' : 'btn-outline'}" 
+                  style="border-radius: 1rem; padding: 0.35rem 0.85rem; font-size: 0.85rem;"
+                  onclick="RecipesView.toggleModalTag('${tag}')">
             ${capitalized} (${tagCounts[tag]})
           </button>
         `;
-      });
-      chipsContainer.innerHTML = chipsHtml;
+      }).join('');
     }
+
+    this.updateModalApplyButton();
   },
 
-  selectTag(tag) {
-    this.state.selectedTag = tag;
-    this.renderTagCloud();
+  toggleModalTag(tag) {
+    const idx = this.state.draftTags.indexOf(tag);
+    if (idx > -1) {
+      this.state.draftTags.splice(idx, 1);
+    } else {
+      this.state.draftTags.push(tag);
+    }
+    this.renderModalFilterOptions();
+  },
+
+  setModalMaxTime(time) {
+    this.state.draftMaxTime = time;
+    this.renderModalFilterOptions();
+  },
+
+  resetModalFilters() {
+    this.state.draftTags = [];
+    this.state.draftMaxTime = null;
+    this.renderModalFilterOptions();
+  },
+
+  updateModalApplyButton() {
+    const applyBtn = document.getElementById('filter-modal-apply-btn');
+    if (!applyBtn) return;
+
+    // Calculate matching count with draft filters
+    const query = this.state.searchQuery;
+    const tags = this.state.draftTags;
+    const maxTime = this.state.draftMaxTime;
+
+    const count = (this.state.recipes || []).filter(r => {
+      const matchesQuery = !query || 
+        r.title.toLowerCase().includes(query) ||
+        (r.tags || []).some(t => t.toLowerCase().includes(query)) ||
+        (r.ingredients || []).some(i => i.toLowerCase().includes(query));
+
+      const matchesTags = tags.length === 0 || tags.every(t => (r.tags || []).some(rt => rt.toLowerCase() === t));
+
+      const totalTime = r.totalTime || (r.prepTime + r.cookTime) || 20;
+      const matchesTime = !maxTime || totalTime <= maxTime;
+
+      return matchesQuery && matchesTags && matchesTime;
+    }).length;
+
+    applyBtn.innerText = `Show ${count} ${count === 1 ? 'Recipe' : 'Recipes'}`;
+  },
+
+  applyFilterModal() {
+    this.state.selectedTags = [...this.state.draftTags];
+    this.state.maxTime = this.state.draftMaxTime;
+    this.closeFilterModal();
+    this.filterAndRender();
+  },
+
+  removeTagFilter(tag) {
+    const idx = this.state.selectedTags.indexOf(tag);
+    if (idx > -1) {
+      this.state.selectedTags.splice(idx, 1);
+    }
+    this.filterAndRender();
+  },
+
+  clearTimeFilter() {
+    this.state.maxTime = null;
     this.filterAndRender();
   },
 
@@ -218,12 +359,14 @@ const RecipesView = {
 
   clearAllFilters() {
     this.state.searchQuery = '';
-    this.state.selectedTag = '';
+    this.state.selectedTags = [];
+    this.state.maxTime = null;
+    this.state.draftTags = [];
+    this.state.draftMaxTime = null;
     const input = document.getElementById('recipe-library-search');
     if (input) input.value = '';
     const clearBtn = document.getElementById('recipe-search-clear-btn');
     if (clearBtn) clearBtn.style.display = 'none';
-    this.renderTagCloud();
     this.filterAndRender();
   },
 
@@ -242,14 +385,27 @@ const RecipesView = {
     const content = document.getElementById('recipes-library-content');
     const statusBar = document.getElementById('recipe-filter-status-bar');
     const clearBtn = document.getElementById('recipe-search-clear-btn');
+    const filterBadge = document.getElementById('recipe-active-filter-badge');
 
     if (!content || !this.state.recipes) return;
 
     const query = this.state.searchQuery;
-    const tag = this.state.selectedTag;
+    const tags = this.state.selectedTags;
+    const maxTime = this.state.maxTime;
     const sort = this.state.sortMode;
 
     if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+
+    // Update Filter trigger button badge count
+    const activeFilterCount = tags.length + (maxTime ? 1 : 0);
+    if (filterBadge) {
+      if (activeFilterCount > 0) {
+        filterBadge.innerText = activeFilterCount;
+        filterBadge.style.display = 'inline-block';
+      } else {
+        filterBadge.style.display = 'none';
+      }
+    }
 
     let filtered = this.state.recipes.filter(r => {
       const matchesQuery = !query || 
@@ -257,22 +413,37 @@ const RecipesView = {
         (r.tags || []).some(t => t.toLowerCase().includes(query)) ||
         (r.ingredients || []).some(i => i.toLowerCase().includes(query));
 
-      const matchesTag = !tag || (r.tags || []).some(t => t.toLowerCase() === tag);
+      const matchesTags = tags.length === 0 || tags.every(t => (r.tags || []).some(rt => rt.toLowerCase() === t));
 
-      return matchesQuery && matchesTag;
+      const totalTime = r.totalTime || (r.prepTime + r.cookTime) || 20;
+      const matchesTime = !maxTime || totalTime <= maxTime;
+
+      return matchesQuery && matchesTags && matchesTime;
     });
 
     Utils.sortRecipes(filtered, sort);
 
+    // Update Filter Status Bar
     if (statusBar) {
-      if (query || tag) {
-        let filterLabels = [];
-        if (query) filterLabels.push(`search "${query}"`);
-        if (tag) filterLabels.push(`tag "${tag.charAt(0).toUpperCase() + tag.slice(1)}"`);
+      if (query || tags.length > 0 || maxTime) {
+        let pillsHtml = '';
+        if (query) {
+          pillsHtml += `<span style="background: rgba(255,255,255,0.06); border: 1px solid var(--border); padding: 0.2rem 0.55rem; border-radius: 0.5rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;">🔍 "${query}" <button onclick="RecipesView.clearSearch()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button></span>`;
+        }
+        if (maxTime) {
+          pillsHtml += `<span style="background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); padding: 0.2rem 0.55rem; border-radius: 0.5rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;">⏱️ Under ${maxTime}m <button onclick="RecipesView.clearTimeFilter()" style="background:none; border:none; color:inherit; cursor:pointer;">✕</button></span>`;
+        }
+        tags.forEach(t => {
+          const cap = t.charAt(0).toUpperCase() + t.slice(1);
+          pillsHtml += `<span style="background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); padding: 0.2rem 0.55rem; border-radius: 0.5rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;">🏷️ ${cap} <button onclick="RecipesView.removeTagFilter('${t}')" style="background:none; border:none; color:inherit; cursor:pointer;">✕</button></span>`;
+        });
 
         statusBar.innerHTML = `
-          <span style="color: var(--text-secondary); font-size: 0.875rem;">Showing <strong>${filtered.length}</strong> of ${this.state.recipes.length} recipes (filtered by ${filterLabels.join(' & ')})</span>
-          <button class="btn btn-outline btn-sm" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-color: rgba(239,68,68,0.4); color: #f87171;" onclick="RecipesView.clearAllFilters()">Clear Filters ✕</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="color: var(--text-secondary); font-size: 0.875rem;">Showing <strong>${filtered.length}</strong> of ${this.state.recipes.length} recipes:</span>
+            ${pillsHtml}
+          </div>
+          <button class="btn btn-outline btn-sm" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-color: rgba(239,68,68,0.4); color: #f87171;" onclick="RecipesView.clearAllFilters()">Clear All ✕</button>
         `;
       } else {
         statusBar.innerHTML = `<span style="color: var(--text-muted); font-size: 0.85rem;">Showing all ${filtered.length} saved recipes</span>`;
@@ -282,9 +453,9 @@ const RecipesView = {
     if (filtered.length === 0) {
       content.innerHTML = `
         <div style="background: var(--surface); padding: 3.5rem 2rem; border-radius: 1.25rem; border: 1px solid var(--border); text-align: center; margin-top: 1rem;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
-          <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--text);">No recipes found</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">No saved recipes matched your current search or tag filters.</p>
+          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🎛️</div>
+          <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--text);">No recipes match your filters</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">Try resetting your filters to discover saved recipes in your library.</p>
           <button class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="RecipesView.clearAllFilters()">Reset Filters & Show All</button>
         </div>
       `;
@@ -307,48 +478,8 @@ const RecipesView = {
     content.appendChild(grid);
   },
 
-  async addToPlan(recipeId) {
-    const planView = (typeof PlanView !== 'undefined') ? PlanView : window.PlanView;
-    if (planView) {
-      if (!planView.state || !planView.state.plans || planView.state.plans.length === 0) {
-        try {
-          planView.state = planView.state || { plans: [], expandedWeekOf: null };
-          planView.state.plans = await api.plan.plans();
-        } catch(e) {
-          console.error(e);
-        }
-      }
-      planView.activeRecipeId = recipeId;
-      
-      const targetWeek = planView.getActiveWeekOf ? planView.getActiveWeekOf() : (planView.state && planView.state.plans && planView.state.plans.length > 0 ? planView.state.plans[0].weekOf : null);
-      await planView.openDayModal([], 'Dinner', targetWeek);
-    } else {
-      Toast.show('Plan view unavailable', 'danger');
-    }
-  },
-
-  deleteRecipe(id, title) {
-    ConfirmModal.show({
-      title: 'Delete Recipe',
-      message: `Are you sure you want to permanently delete "${title}"? This will delete the markdown file and associated PDF.`,
-      confirmText: 'Delete Recipe',
-      danger: true,
-      onConfirm: async () => {
-        try {
-          await api.recipes.delete(id);
-          Toast.show('Recipe deleted', 'success');
-          if (window.RecipeCard) RecipeCard.closeModal();
-          await this.loadRecipes();
-        } catch (e) {
-          Toast.show('Failed to delete recipe');
-        }
-      }
-    });
-  },
-
-  openBatchModal() {
-    const modal = document.getElementById('batch-pdf-modal');
-    if (modal) modal.classList.add('open');
+  openStandalone(id) {
+    window.open(`/api/recipes/${id}/view`, '_blank', 'width=800,height=900,scrollbars=yes,resizable=yes');
   },
 
   openBatchModal() {
