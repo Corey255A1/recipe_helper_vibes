@@ -560,14 +560,15 @@ const PlanView = {
   },
 
   async submitDecision(id, decision, assignedDays, mealType, weekOf) {
-    const isSuggestionsTab = this.activeTab === 'suggestions';
-    const card = isSuggestionsTab ? document.querySelector(`.recipe-card[data-id="${id}"]`) : null;
+    const isPlanRoute = document.body.classList.contains('route-plan') || (window.location.hash === '#plan' || window.location.hash === '');
+    const isSuggestionsTab = isPlanRoute && this.activeTab === 'suggestions';
+    const card = isSuggestionsTab ? document.querySelector(`#discover-content .recipe-card[data-id="${id}"]`) : null;
     if (card) card.style.opacity = '0.5';
     
     try {
       if (!weekOf) weekOf = this.state.expandedWeekOf;
       
-      const plan = this.state.plans.find(p => p.weekOf === weekOf);
+      const plan = (this.state.plans || []).find(p => p.weekOf === weekOf);
       const isExistingMeal = plan && plan.meals.find(m => m.recipeId === id);
       
       if (isExistingMeal) {
@@ -576,20 +577,23 @@ const PlanView = {
         await api.plan.decide([{ recipeId: id, decision, assignedDays, mealType }], weekOf);
       }
       
-      if (isSuggestionsTab && !isExistingMeal) {
-        if (card) card.remove();
-        this.state.suggestions = this.state.suggestions.filter(s => s.id !== id);
+      if (isSuggestionsTab && !isExistingMeal && card) {
+        card.remove();
+        this.state.suggestions = (this.state.suggestions || []).filter(s => s.id !== id);
         
         if (this.state.suggestions.length === 0) {
           Toast.show('All suggestions processed.');
-          document.getElementById('discover-content').innerHTML = `<p>Ready to suggest more meals.</p>`;
+          const discoverContent = document.getElementById('discover-content');
+          if (discoverContent) discoverContent.innerHTML = `<p>Ready to suggest more meals.</p>`;
         }
       } else {
-        Toast.show('Plan updated!', 'success');
+        Toast.show('Meal added to plan!', 'success');
       }
       
       this.state.plans = await api.plan.plans();
-      await this.refresh();
+      if (isPlanRoute && typeof this.refresh === 'function') {
+        await this.refresh();
+      }
     } catch (e) {
       console.error(e);
       if (card) card.style.opacity = '1';

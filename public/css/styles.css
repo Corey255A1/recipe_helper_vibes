@@ -147,15 +147,11 @@ nav a.active .step-num {
 }
 
 body.route-recipes {
-  overflow: hidden;
-  padding-bottom: 0;
+  padding-bottom: 2rem;
 }
 
 #recipes-view.active {
-  display: flex;
-  flex-direction: column;
-  height: calc(100dvh - 110px);
-  overflow: hidden;
+  display: block;
 }
 
 .library-control-panel {
@@ -163,23 +159,27 @@ body.route-recipes {
   border: 1px solid var(--border);
   border-radius: 1.25rem;
   padding: 1rem 1.5rem;
-  margin-bottom: 1rem;
-  flex-shrink: 0;
+  margin-bottom: 1.25rem;
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 76px;
+  z-index: 80;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 @media (max-width: 768px) {
   #recipes-view.active {
     margin-top: 0.25rem;
-    height: calc(100dvh - 110px);
   }
   body.route-recipes main.container {
-    padding: 2px;
+    padding: 0.5rem;
   }
   .library-control-panel {
     padding: 0.85rem 1rem;
     border-radius: 0.75rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.75rem;
+    top: 60px;
   }
 }
 
