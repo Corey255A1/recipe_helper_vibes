@@ -230,18 +230,22 @@ const RecipesView = {
   },
 
   async addToPlan(recipeId) {
-    if (window.PlanView) {
-      if (!PlanView.state.plans || PlanView.state.plans.length === 0) {
+    const planView = (typeof PlanView !== 'undefined') ? PlanView : window.PlanView;
+    if (planView) {
+      if (!planView.state || !planView.state.plans || planView.state.plans.length === 0) {
         try {
-          PlanView.state.plans = await api.plan.plans();
-        } catch(e) {}
+          planView.state = planView.state || { plans: [], expandedWeekOf: null };
+          planView.state.plans = await api.plan.plans();
+        } catch(e) {
+          console.error(e);
+        }
       }
-      PlanView.activeRecipeId = recipeId;
+      planView.activeRecipeId = recipeId;
       
-      const targetWeek = PlanView.getActiveWeekOf ? PlanView.getActiveWeekOf() : null;
-      await PlanView.openDayModal([], 'Dinner', targetWeek);
+      const targetWeek = planView.getActiveWeekOf ? planView.getActiveWeekOf() : (planView.state && planView.state.plans && planView.state.plans.length > 0 ? planView.state.plans[0].weekOf : null);
+      await planView.openDayModal([], 'Dinner', targetWeek);
     } else {
-      Toast.show('Recipe selected for plan', 'info');
+      Toast.show('Plan view unavailable', 'danger');
     }
   },
 

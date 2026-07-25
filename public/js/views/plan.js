@@ -615,3 +615,5 @@ const PlanView = {
     RecipeCard.closeModal();
   }
 };
+
+window.PlanView = PlanView;
