@@ -4,6 +4,7 @@ const fs = require('fs').promises;
 
 // Official candidate models in order of preference
 const CANDIDATE_MODELS = [
+  'gemini-3.5-flash-lite',
   'gemini-3.5-flash',
   'gemini-2.0-flash',
   'gemini-2.0-flash-lite',
