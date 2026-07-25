@@ -170,17 +170,19 @@ const PlanView = {
       this.state.expandedWeekOf = null;
     } else {
       this.state.expandedWeekOf = weekOf;
-      const activePlan = this.state.plans.find(p => p.weekOf === weekOf);
+      const activePlan = (this.state.plans || []).find(p => p.weekOf === weekOf);
       if (activePlan && activePlan.pendingSuggestions) {
         this.state.suggestions = activePlan.pendingSuggestions;
       } else {
         this.state.suggestions = [];
       }
-      if (this.activeTab === 'suggestions') {
-        this.renderSuggestions();
-      }
     }
+    
     this.refresh();
+
+    if (this.activeTab === 'suggestions') {
+      this.renderSuggestions();
+    }
   },
 
   async refresh() {
@@ -415,8 +417,9 @@ const PlanView = {
 
   renderSuggestions() {
     const content = document.getElementById('discover-content');
+    if (!content) return;
     if (!this.state.suggestions || !this.state.suggestions.length) {
-      content.innerHTML = `<p style="color: var(--text-secondary);">No suggestions available. Click "Suggest Meals" to get started.</p>`;
+      content.innerHTML = `<p style="color: var(--text-secondary);">No suggestions available. Click "Generate Suggestions" to get started.</p>`;
       return;
     }
 
