@@ -1,0 +1,258 @@
+{
+  "weekOf": "2026-07-22",
+  "status": "finalized",
+  "meals": [
+    {
+      "recipeId": "easy-greek-pita-pizzas",
+      "assignedDays": [
+        "Tuesday"
+      ],
+      "servings": 3
+    },
+    {
+      "recipeId": "quick-5-ingredient-avocado-pasta",
+      "assignedDays": [
+        "Wednesday"
+      ],
+      "servings": 3
+    },
+    {
+      "recipeId": "sheet-pan-garlic-butter-tilapia",
+      "assignedDays": [
+        "Thursday"
+      ],
+      "servings": 3
+    },
+    {
+      "recipeId": "easy-chicken-quesadillas",
+      "assignedDays": [
+        "Monday"
+      ],
+      "servings": 3
+    },
+    {
+      "recipeId": "baked-homemade-fish-sticks",
+      "assignedDays": [
+        "Friday"
+      ],
+      "servings": 3
+    }
+  ],
+  "pendingSuggestions": [
+    {
+      "id": "easy-mediterranean-chicken-rice",
+      "title": "Easy Mediterranean Chicken and Rice Skillet",
+      "prepTime": 10,
+      "cookTime": 30,
+      "totalTime": 40,
+      "servings": 3,
+      "tags": [
+        "mediterranean",
+        "chicken",
+        "quick-and-easy",
+        "kid-friendly"
+      ],
+      "source": "cache",
+      "ingredients": [
+        "1 lb chicken breasts, diced into bite-sized pieces",
+        "1 cup long-grain white rice",
+        "2 cups low-sodium chicken broth",
+        "1 tablespoon olive oil",
+        "1 teaspoon dried oregano",
+        "1/2 cup canned sliced black olives"
+      ],
+      "instructions": [
+        "Heat olive oil in a large skillet over medium-high heat and brown the diced chicken for 5 minutes.",
+        "Stir in the white rice, chicken broth, dried oregano, and black olives.",
+        "Bring the mixture to a boil, then cover and reduce heat to low.",
+        "Simmer for 20 minutes until the rice is tender and the liquid is absorbed.",
+        "Fluff with a fork and let cool slightly before serving."
+      ],
+      "notes": ""
+    },
+    {
+      "id": "sheet-pan-shrimp-fajitas",
+      "title": "Sheet Pan Shrimp Fajitas",
+      "prepTime": 10,
+      "cookTime": 12,
+      "totalTime": 22,
+      "servings": 3,
+      "tags": [
+        "seafood",
+        "mexican",
+        "quick-and-easy",
+        "kid-friendly"
+      ],
+      "source": "cache",
+      "ingredients": [
+        "1 lb peeled and deveined shrimp",
+        "1 bell pepper, sliced",
+        "1 small onion, sliced",
+        "1 tablespoon olive oil",
+        "1 tablespoon mild taco seasoning",
+        "6 small flour tortillas for serving"
+      ],
+      "instructions": [
+        "Preheat oven to 400°F (200°C).",
+        "On a large baking sheet, toss shrimp, bell pepper, and onion with olive oil and taco seasoning.",
+        "Spread the ingredients in a single even layer.",
+        "Bake for 10-12 minutes until the shrimp are pink and cooked through.",
+        "Serve inside warmed tortillas."
+      ],
+      "notes": ""
+    },
+    {
+      "id": "slow-cooker-mexican-chicken",
+      "title": "Slow Cooker Shredded Mexican Chicken",
+      "prepTime": 10,
+      "cookTime": 240,
+      "totalTime": 250,
+      "servings": 6,
+      "tags": [
+        "mexican",
+        "chicken",
+        "slow-cooker",
+        "kid-friendly",
+        "sunday-prep"
+      ],
+      "source": "cache",
+      "ingredients": [
+        "1.5 lbs chicken breasts",
+        "1 jar (16 oz) mild salsa",
+        "1 packet taco seasoning",
+        "1 tablespoon lime juice"
+      ],
+      "instructions": [
+        "Place chicken breasts in the bottom of the slow cooker.",
+        "Sprinkle taco seasoning over the chicken.",
+        "Pour the salsa and lime juice on top.",
+        "Cover and cook on low for 6-8 hours or high for 3-4 hours.",
+        "Shred the chicken with two forks and stir back into the juices."
+      ],
+      "notes": "Perfect for Sunday meal prep to eat on Monday."
+    },
+    {
+      "id": "mediterranean-garlic-shrimp",
+      "title": "Simple Mediterranean Garlic Butter Shrimp",
+      "prepTime": 10,
+      "cookTime": 10,
+      "totalTime": 20,
+      "servings": 3,
+      "tags": [
+        "seafood",
+        "mediterranean",
+        "quick-and-easy"
+      ],
+      "source": "web",
+      "ingredients": [
+        "1 lb shrimp, peeled and deveined",
+        "2 tablespoons olive oil",
+        "2 tablespoons butter",
+        "3 cloves garlic, minced",
+        "1 tablespoon lemon juice",
+        "1/4 cup crumbled feta cheese"
+      ],
+      "instructions": [
+        "Heat olive oil and butter in a large skillet over medium heat.",
+        "Add minced garlic and sauté for 1 minute until fragrant.",
+        "Add the shrimp to the skillet and cook for 2-3 minutes per side until they turn pink and opaque.",
+        "Stir in the lemon juice and remove from heat.",
+        "Top with crumbled feta cheese and serve warm."
+      ],
+      "notes": "Serve over rice or with soft pita bread."
+    },
+    {
+      "id": "simple-fish-tacos",
+      "title": "Easy 15-Minute Fish Tacos",
+      "prepTime": 5,
+      "cookTime": 10,
+      "totalTime": 15,
+      "servings": 3,
+      "tags": [
+        "seafood",
+        "mexican",
+        "quick-and-easy",
+        "kid-friendly"
+      ],
+      "source": "web",
+      "ingredients": [
+        "1 lb white fish fillets (like cod or tilapia)",
+        "1 tablespoon olive oil",
+        "1 tablespoon mild taco seasoning",
+        "6 small flour tortillas",
+        "1 cup finely shredded lettuce",
+        "1/4 cup sour cream"
+      ],
+      "instructions": [
+        "Rub fish fillets with olive oil and sprinkle with mild taco seasoning on both sides.",
+        "Heat a non-stick skillet over medium heat and cook fish for 3-4 minutes per side, until it easily flakes with a fork.",
+        "Warm the tortillas in the microwave for 15 seconds.",
+        "Flake the fish into bite-sized pieces and divide among tortillas.",
+        "Top with shredded lettuce and a dollop of sour cream."
+      ],
+      "notes": "Flaked fish is soft and easy for a toddler to eat."
+    },
+    {
+      "id": "greek-lemon-chicken-rice-soup",
+      "title": "Cozy Greek Lemon Chicken Soup",
+      "prepTime": 15,
+      "cookTime": 30,
+      "totalTime": 45,
+      "servings": 6,
+      "tags": [
+        "mediterranean",
+        "chicken",
+        "kid-friendly",
+        "sunday-prep"
+      ],
+      "source": "web",
+      "ingredients": [
+        "1.5 lbs chicken breasts",
+        "1 cup white rice, uncooked",
+        "6 cups low-sodium chicken broth",
+        "2 large eggs",
+        "1/4 cup fresh lemon juice",
+        "1 cup carrots, finely diced"
+      ],
+      "instructions": [
+        "In a large pot, bring chicken broth and diced carrots to a boil. Add chicken breasts and simmer for 15 minutes until cooked through. Remove chicken, shred, and set aside.",
+        "Stir the white rice into the boiling broth, cover, and cook on low for 15 minutes.",
+        "In a medium bowl, whisk together the eggs and lemon juice. Slowly ladle 1 cup of hot broth into the egg mixture while whisking constantly to temper the eggs.",
+        "Pour the egg mixture and shredded chicken back into the pot, stirring well.",
+        "Simmer on low for an additional 2-3 minutes until thickened. Do not boil. Let cool slightly before serving."
+      ],
+      "notes": "Makes a generous 6 servings. Thick, creamy, and holds up beautifully as leftovers for Monday."
+    },
+    {
+      "id": "simple-turkey-burgers",
+      "title": "Kid-Friendly Baked Turkey Burgers",
+      "prepTime": 10,
+      "cookTime": 20,
+      "totalTime": 30,
+      "servings": 3,
+      "tags": [
+        "american",
+        "quick-and-easy",
+        "kid-friendly"
+      ],
+      "source": "web",
+      "ingredients": [
+        "1 lb ground turkey",
+        "1/4 cup fine breadcrumbs",
+        "1 egg",
+        "1/2 teaspoon garlic powder",
+        "1/2 teaspoon salt",
+        "3 hamburger buns"
+      ],
+      "instructions": [
+        "Preheat oven to 375°F (190°C) and line a baking sheet with foil.",
+        "In a bowl, mix ground turkey, breadcrumbs, egg, garlic powder, and salt until just combined.",
+        "Shape into 3 flat patties and place on the baking sheet.",
+        "Bake for 18-20 minutes until the internal temperature reaches 165°F.",
+        "Serve on buns, cutting your toddler's portion into small bite-sized pieces."
+      ],
+      "notes": "Baking keeps these burgers incredibly moist and easy to chew for toddlers."
+    }
+  ],
+  "groceryListGenerated": false
+}

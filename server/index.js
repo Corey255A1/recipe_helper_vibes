@@ -1,8 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const config = require('./config');
 const errorHandler = require('./middleware/errorHandler');
+
+// Prevent unhandled promise rejections from crashing the container
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Ensure data directories exist at runtime
+try {
+  fs.mkdirSync(config.dataPaths.recipesDir, { recursive: true });
+} catch (err) {
+  console.error('Failed to create data directories:', err);
+}
 
 const app = express();
 

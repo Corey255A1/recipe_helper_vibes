@@ -7,14 +7,11 @@ WORKDIR /app
 # Copy package files first for caching
 COPY package*.json ./
 
-# Install production dependencies
-RUN npm ci --only=production
+# Install production dependencies cleanly
+RUN npm ci --omit=dev
 
 # Copy source code
 COPY . .
-
-# Create data directory for recipe storage
-RUN mkdir -p /data/recipes
 
 # Expose port
 EXPOSE 3000
@@ -23,9 +20,6 @@ EXPOSE 3000
 ENV PORT=3000
 ENV DATA_DIR=/data
 ENV NODE_ENV=production
-
-# Define persistent storage volume
-VOLUME ["/data"]
 
 # Run the server
 CMD ["node", "server/index.js"]

@@ -80,6 +80,7 @@ async function getPlans() {
 
 async function savePlans(plans) {
   plans.sort((a, b) => new Date(a.weekOf) - new Date(b.weekOf));
+  await fs.mkdir(config.dataPaths.dataDir, { recursive: true });
   await fs.writeFile(config.dataPaths.plans, JSON.stringify(plans, null, 2));
 }
 

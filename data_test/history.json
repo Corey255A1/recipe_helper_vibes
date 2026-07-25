@@ -1,0 +1,190 @@
+{
+  "weeks": [
+    {
+      "weekOf": "2026-06-14",
+      "status": "finalized",
+      "meals": [
+        {
+          "recipeId": "quick-5-ingredient-avocado-pasta",
+          "assignedDays": [
+            "Monday",
+            "Tuesday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "easy-baked-salmon",
+          "assignedDays": [
+            "Wednesday",
+            "Thursday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "sheet-pan-shrimp-fajitas",
+          "assignedDays": [
+            "Friday",
+            null
+          ],
+          "servings": 3
+        }
+      ],
+      "finalizedAt": "2026-06-19T00:00:00.000Z"
+    },
+    {
+      "weekOf": "2026-06-21",
+      "status": "finalized",
+      "meals": [
+        {
+          "recipeId": "greek-lemon-chicken-potatoes",
+          "assignedDays": [
+            "Monday",
+            "Tuesday"
+          ],
+          "servings": 6
+        },
+        {
+          "recipeId": "slow-cooker-mexican-chicken",
+          "assignedDays": [
+            "Wednesday",
+            "Thursday"
+          ],
+          "servings": 6
+        },
+        {
+          "recipeId": "easy-baked-salmon",
+          "assignedDays": [
+            "Friday",
+            null
+          ],
+          "servings": 3
+        }
+      ],
+      "finalizedAt": "2026-06-26T00:00:00.000Z"
+    },
+    {
+      "weekOf": "2026-06-28",
+      "status": "finalized",
+      "meals": [
+        {
+          "recipeId": "easy-greek-pita-pizzas",
+          "assignedDays": [
+            "Monday",
+            "Tuesday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "easy-mediterranean-chicken-rice",
+          "assignedDays": [
+            "Wednesday",
+            "Thursday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "slow-cooker-mexican-chicken",
+          "assignedDays": [
+            "Friday",
+            null
+          ],
+          "servings": 6
+        }
+      ],
+      "finalizedAt": "2026-07-03T00:00:00.000Z"
+    },
+    {
+      "weekOf": "2026-07-05",
+      "status": "finalized",
+      "meals": [
+        {
+          "recipeId": "easy-baked-salmon",
+          "assignedDays": [
+            "Monday",
+            "Tuesday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "sheet-pan-garlic-butter-tilapia",
+          "assignedDays": [
+            "Wednesday",
+            "Thursday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "easy-greek-pita-pizzas",
+          "assignedDays": [
+            "Friday",
+            null
+          ],
+          "servings": 3
+        }
+      ],
+      "finalizedAt": "2026-07-10T00:00:00.000Z"
+    },
+    {
+      "weekOf": "2026-07-12",
+      "status": "finalized",
+      "meals": [
+        {
+          "recipeId": "easy-greek-pita-pizzas",
+          "assignedDays": [
+            "Monday",
+            "Tuesday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "baked-homemade-fish-sticks",
+          "assignedDays": [
+            "Wednesday",
+            "Thursday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "easy-pork-schnitzel",
+          "assignedDays": [
+            "Friday",
+            null
+          ],
+          "servings": 4
+        }
+      ],
+      "finalizedAt": "2026-07-17T00:00:00.000Z"
+    },
+    {
+      "weekOf": "2026-07-19",
+      "status": "finalized",
+      "meals": [
+        {
+          "recipeId": "easy-greek-pita-pizzas",
+          "assignedDays": [
+            "Monday",
+            "Tuesday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "sheet-pan-shrimp-fajitas",
+          "assignedDays": [
+            "Wednesday",
+            "Thursday"
+          ],
+          "servings": 3
+        },
+        {
+          "recipeId": "quick-5-ingredient-avocado-pasta",
+          "assignedDays": [
+            "Friday",
+            null
+          ],
+          "servings": 3
+        }
+      ],
+      "finalizedAt": "2026-07-24T00:00:00.000Z"
+    }
+  ]
+}
