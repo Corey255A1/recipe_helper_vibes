@@ -69,8 +69,8 @@ const RecipeCard = {
 
       content.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem;">
-          <h2 style="margin: 0;">${recipe.title}</h2>
-          <button class="btn btn-outline" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; color: #f87171; border-color: rgba(239, 68, 68, 0.3);" onclick="RecipesView.deleteRecipe('${recipe.id}', '${recipe.title.replace(/'/g, "\\'")}')" title="Delete Recipe">🗑️</button>
+          <h2 style="margin: 0; font-size: 1.4rem;">${recipe.title}</h2>
+          <button class="btn btn-outline" style="padding: 0.35rem 0.65rem; font-size: 1.1rem; line-height: 1; border-radius: 0.5rem; color: var(--text-muted);" onclick="RecipeCard.closeModal()" title="Close">✕</button>
         </div>
         <div class="recipe-meta" style="margin-bottom: 1rem;">
           <span>⏱️ Prep: ${recipe.prepTime || 0}m</span>
@@ -98,6 +98,12 @@ const RecipeCard = {
           <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">Notes</h3>
           <p style="color: var(--text-muted); font-size: 0.9rem;">${recipe.notes}</p>
         ` : ''}
+
+        <!-- Bottom Actions Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
+          <button class="btn btn-outline" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); font-size: 0.85rem;" onclick="RecipesView.deleteRecipe('${recipe.id}', '${recipe.title.replace(/'/g, "\\'")}')">🗑️ Delete Recipe</button>
+          <button class="btn btn-outline" style="font-size: 0.85rem;" onclick="RecipeCard.closeModal()">Close</button>
+        </div>
       `;
 
       modal.classList.add('open');

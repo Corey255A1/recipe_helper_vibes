@@ -232,9 +232,9 @@ router.get('/:id/view', async (req, res, next) => {
       </head>
       <body>
         <div class="container">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
             <button class="print-btn" style="margin: 0;" onclick="window.print()">🖨️ Print / Save PDF</button>
-            <button class="btn btn-outline" style="padding: 0.5rem 1rem; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); background: transparent; border-radius: 0.5rem; cursor: pointer;" onclick="if(confirm('Are you sure you want to delete this recipe? This will delete the markdown file and associated PDF.')) { fetch('/api/recipes/${recipe.id}', {method: 'DELETE'}).then(res => { if(res.ok) { alert('Recipe deleted. You can close this window.'); window.close(); } else alert('Failed to delete'); }) }">🗑️ Delete Recipe</button>
+            <button style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.35rem 0.65rem; font-size: 1.1rem; border-radius: 0.5rem; cursor: pointer;" onclick="window.close()" title="Close Window">✕</button>
           </div>
           <h1>${recipe.title}</h1>
           <div class="meta">
@@ -254,6 +254,12 @@ router.get('/:id/view', async (req, res, next) => {
           <ol>${instructions}</ol>
 
           ${recipe.notes ? `<h2>Notes</h2><p style="color: var(--text-muted);">${recipe.notes}</p>` : ''}
+
+          <!-- Bottom Actions -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
+            <button style="padding: 0.5rem 1rem; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); background: transparent; border-radius: 0.5rem; cursor: pointer; font-family: inherit; font-size: 0.85rem;" onclick="if(confirm('Are you sure you want to delete this recipe? This will delete the markdown file and associated PDF.')) { fetch('/api/recipes/${recipe.id}', {method: 'DELETE'}).then(res => { if(res.ok) { alert('Recipe deleted.'); window.close(); } else alert('Failed to delete'); }) }">🗑️ Delete Recipe</button>
+            <button style="padding: 0.5rem 1rem; color: var(--text); border: 1px solid var(--border); background: transparent; border-radius: 0.5rem; cursor: pointer; font-family: inherit; font-size: 0.85rem;" onclick="window.close()">Close</button>
+          </div>
         </div>
       </body>
       </html>
