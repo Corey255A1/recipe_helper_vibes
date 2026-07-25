@@ -471,6 +471,17 @@ const PlanView = {
     const modal = document.getElementById('day-modal');
     modal.classList.add('open');
 
+    // If preselectedDays is empty and activeRecipeId is set, check if recipe is already in this week's plan
+    if ((!preselectedDays || preselectedDays.length === 0) && this.activeRecipeId) {
+      const plan = (this.state.plans || []).find(p => p.weekOf === this.activeModalWeekOf);
+      if (plan && plan.meals) {
+        const existing = plan.meals.find(m => m.recipeId === this.activeRecipeId);
+        if (existing && existing.assignedDays) {
+          preselectedDays = existing.assignedDays;
+        }
+      }
+    }
+
     // Populate week selector dropdown
     const weekSelect = document.getElementById('day-modal-week-select');
     if (weekSelect && this.state.plans && this.state.plans.length > 0) {
@@ -492,6 +503,19 @@ const PlanView = {
 
   onDayModalWeekChange(newWeekOf) {
     this.activeModalWeekOf = newWeekOf;
+    
+    // Update prechecked checkboxes for active recipe in newly selected week
+    if (this.activeRecipeId) {
+      const modal = document.getElementById('day-modal');
+      const plan = (this.state.plans || []).find(p => p.weekOf === newWeekOf);
+      const existing = plan && plan.meals ? plan.meals.find(m => m.recipeId === this.activeRecipeId) : null;
+      const daysToPrecheck = existing && existing.assignedDays ? existing.assignedDays : [];
+      
+      modal.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.checked = daysToPrecheck.includes(cb.value);
+      });
+    }
+
     this.updateDayModalPreviews(newWeekOf);
   },
 
