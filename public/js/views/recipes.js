@@ -43,11 +43,6 @@ const RecipesView = {
               <option value="title">Sort: A - Z</option>
             </select>
 
-            <!-- Tag Select Dropdown -->
-            <select id="recipe-tag-cloud-select" onchange="RecipesView.selectTag(this.value)" style="margin-bottom: 0; width: auto; padding: 0.65rem 0.85rem; border-radius: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem;">
-              <option value="">Tag: All</option>
-            </select>
-
             <!-- View Switcher -->
             <div style="display: flex; gap: 0.2rem; background: var(--bg); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
               <button id="recipes-view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="RecipesView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.65rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲</button>
@@ -158,14 +153,13 @@ const RecipesView = {
   },
 
   renderTagCloud() {
-    const selectEl = document.getElementById('recipe-tag-cloud-select');
     const chipsContainer = document.getElementById('recipe-tag-chips-container');
     const countBadge = document.getElementById('recipe-library-count-badge');
 
     const totalCount = (this.state.recipes || []).length;
     if (countBadge) countBadge.innerText = `${totalCount} ${totalCount === 1 ? 'recipe' : 'recipes'}`;
 
-    if (!this.state.recipes) return;
+    if (!this.state.recipes || !chipsContainer) return;
 
     // Collect all unique tags
     const tagCounts = {};
@@ -177,16 +171,6 @@ const RecipesView = {
     });
 
     const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
-
-    if (selectEl) {
-      let selectHtml = `<option value="">Tag: All (${totalCount})</option>`;
-      sortedTags.forEach(tag => {
-        const isSelected = this.state.selectedTag === tag ? 'selected' : '';
-        const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1);
-        selectHtml += `<option value="${tag}" ${isSelected}>${capitalized} (${tagCounts[tag]})</option>`;
-      });
-      selectEl.innerHTML = selectHtml;
-    }
 
     if (chipsContainer) {
       let chipsHtml = `

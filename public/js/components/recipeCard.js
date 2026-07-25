@@ -12,20 +12,14 @@ const RecipeCard = {
       }
     }
 
-    let sourceBadgeHtml = '';
+    let extLinkHtml = '';
     if (recipe.pdfPath) {
-      sourceBadgeHtml = `<span class="source-badge pdf"><a href="${recipe.pdfPath}" target="_blank" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none;">📄 PDF</a></span>`;
+      extLinkHtml = `<a href="${recipe.pdfPath}" target="_blank" onclick="event.stopPropagation()" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.85rem; padding: 0.25rem 0.45rem; border-radius: 0.4rem; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);" title="Open PDF">📄 ↗</a>`;
     } else if (recipe.source && (recipe.source.startsWith('http://') || recipe.source.startsWith('https://'))) {
-      let domain = 'Web';
-      try {
-        domain = new URL(recipe.source).hostname.replace('www.', '');
-      } catch(e) {}
-      sourceBadgeHtml = `<span class="source-badge web"><a href="${recipe.source}" target="_blank" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none;">🌐 ${domain} ↗</a></span>`;
+      extLinkHtml = `<a href="${recipe.source}" target="_blank" onclick="event.stopPropagation()" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.85rem; padding: 0.25rem 0.45rem; border-radius: 0.4rem; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);" title="Open Web Recipe">🌐 ↗</a>`;
     } else if (recipe.source === 'web' || isSuggestion) {
       const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(recipe.title + ' recipe')}`;
-      sourceBadgeHtml = `<span class="source-badge web"><a href="${searchUrl}" target="_blank" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none;">🌐 Web Search ↗</a></span>`;
-    } else {
-      sourceBadgeHtml = `<span class="source-badge saved">💾 Saved</span>`;
+      extLinkHtml = `<a href="${searchUrl}" target="_blank" onclick="event.stopPropagation()" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.85rem; padding: 0.25rem 0.45rem; border-radius: 0.4rem; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);" title="Search Recipe on Web">🌐 ↗</a>`;
     }
 
     const neverBtnHtml = isSuggestion ? `
@@ -37,15 +31,17 @@ const RecipeCard = {
     return `
       <div class="recipe-card" data-id="${recipe.id}">
         
-        <!-- Row 1: Title -->
+        <!-- Row 1: Title & External Links -->
         <div class="card-title-row" onclick="RecipeCard.openModal('${recipe.id}')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; width: 100%;">
           <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0; color: #f8fafc; flex: 1; text-align: left; line-height: 1.3;">${recipe.title}</h3>
-          ${neverBtnHtml}
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            ${extLinkHtml}
+            ${neverBtnHtml}
+          </div>
         </div>
         
-        <!-- Row 2: Meta Pills -->
+        <!-- Row 2: Meta Pills (Primary Metadata Only) -->
         <div class="card-meta-row" onclick="RecipeCard.openModal('${recipe.id}')" style="cursor: pointer; display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; margin-bottom: 0.85rem; align-items: center; width: 100%;">
-          ${sourceBadgeHtml}
           <span style="background: rgba(255, 255, 255, 0.05); padding: 0.2rem 0.5rem; border-radius: 0.4rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary); white-space: nowrap;">⏱️ ${recipe.totalTime || (recipe.prepTime + recipe.cookTime) || 20}m</span>
           <span style="background: rgba(255, 255, 255, 0.05); padding: 0.2rem 0.5rem; border-radius: 0.4rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary); white-space: nowrap;">🍽️ ${recipe.servings || 4} servings</span>
           ${tagsHtml}
