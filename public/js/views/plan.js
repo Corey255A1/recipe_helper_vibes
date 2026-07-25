@@ -17,10 +17,16 @@ const PlanView = {
       const startDate = new Date(weekOfStr + 'T00:00:00');
       const endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
       
-      const startFormatted = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const endFormatted = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const startMonth = startDate.toLocaleDateString('en-US', { month: 'short' });
+      const endMonth = endDate.toLocaleDateString('en-US', { month: 'short' });
+      const startDay = startDate.getDate();
+      const endDay = endDate.getDate();
       
-      return `${startFormatted} – ${endFormatted}`;
+      if (startMonth === endMonth) {
+        return `${startMonth} ${startDay} – ${endDay}`;
+      } else {
+        return `${startMonth} ${startDay} – ${endMonth} ${endDay}`;
+      }
     } catch(e) {
       return weekOfStr;
     }
@@ -218,21 +224,28 @@ const PlanView = {
       
       html += `
         <div class="week-card ${isExpanded ? 'expanded' : 'collapsed'}" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; transition: all 0.3s ease;">
-          <div class="week-header" onclick="PlanView.toggleWeek('${plan.weekOf}')" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${isExpanded ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)'};">
-             <div style="display: flex; align-items: center; gap: 1rem;">
-               <h3 style="margin: 0; font-size: 1.1rem;">Week of ${this.formatWeekRange(plan.weekOf)}</h3>
-               <span style="font-size: 0.85rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 1rem;">${plannedDaysCount}/7 Days Planned</span>
+          <div class="week-header" onclick="PlanView.toggleWeek('${plan.weekOf}')" style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${isExpanded ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)'}; gap: 1rem;">
+             
+             <!-- Left Column: Concise Date String -->
+             <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 0;">
+               <h3 style="margin: 0; font-size: 1.05rem; white-space: nowrap;">Week of ${this.formatWeekRange(plan.weekOf)}</h3>
              </div>
              
-             <div class="week-summary" style="display: ${isExpanded ? 'none' : 'flex'}; gap: 0.5rem; flex: 1; justify-content: center; opacity: 0.8;">
-                 ${daysOfWeek.map(d => `<span title="${d}" style="width: 12px; height: 12px; border-radius: 50%; background: ${dailyMeals[d].length > 0 ? 'var(--primary)' : 'var(--border)'};"></span>`).join('')}
-             </div>
-             
-             <div style="display: flex; align-items: center; gap: 0.75rem;">
+             <!-- Right Column: Nested Days Planned Badge + 7 Dots Column -->
+             <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+               <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem;">
+                 <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 0.15rem 0.55rem; border-radius: 1rem; white-space: nowrap;">
+                   ${plannedDaysCount}/7 Days Planned
+                 </span>
+                 <div class="week-summary-dots" style="display: flex; gap: 0.3rem; opacity: 0.85;">
+                   ${daysOfWeek.map(d => `<span title="${d}" style="width: 8px; height: 8px; border-radius: 50%; background: ${dailyMeals[d].length > 0 ? 'var(--primary)' : 'rgba(255,255,255,0.15)'};"></span>`).join('')}
+                 </div>
+               </div>
+
                ${this.state.plans.length > 1 ? `
-                 <button onclick="PlanView.removeWeek(event, '${plan.weekOf}')" title="Delete this week plan" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; border-radius: 0.5rem; padding: 0.3rem 0.65rem; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'">🗑️ Remove Week</button>
+                 <button onclick="PlanView.removeWeek(event, '${plan.weekOf}')" title="Delete this week plan" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; border-radius: 0.5rem; padding: 0.3rem 0.6rem; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'">🗑️</button>
                ` : ''}
-               <div style="font-size: 0.9rem; color: var(--text-muted); transition: transform 0.2s; transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0)'};">
+               <div style="font-size: 0.85rem; color: var(--text-muted); transition: transform 0.2s; transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0)'};">
                   ▼
                </div>
              </div>
