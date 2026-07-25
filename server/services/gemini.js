@@ -84,19 +84,33 @@ class GeminiService {
     return { model: genAI.getGenerativeModel({ model: modelName }), modelName };
   }
 
-  async generateContentWithFallback(requestData) {
+  async generateContentWithFallback(requestData, maxRetries = 3) {
     let { model, modelName } = await this.getModel();
-    try {
-      return await model.generateContent(requestData);
-    } catch (error) {
-      const msg = (error.message || '').toLowerCase();
-      // If primary model failed due to quota limit or unsupported free tier model, fallback to gemini-1.5-flash
-      if (modelName !== 'gemini-1.5-flash' && (msg.includes('quota') || msg.includes('limit') || msg.includes('429'))) {
-        console.warn(`[GEMINI] Model ${modelName} failed with quota/limit error. Retrying with gemini-1.5-flash...`);
-        const { model: fallbackModel } = await this.getModel('gemini-1.5-flash');
-        return await fallbackModel.generateContent(requestData);
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await model.generateContent(requestData);
+      } catch (error) {
+        const msg = (error.message || '').toLowerCase();
+        const isRateLimit = msg.includes('quota') || msg.includes('limit') || msg.includes('429') || msg.includes('resource_exhausted');
+        
+        if (isRateLimit) {
+          if (modelName !== 'gemini-1.5-flash') {
+            console.warn(`[GEMINI] Model ${modelName} hit rate limit. Switching to gemini-1.5-flash...`);
+            const fallback = await this.getModel('gemini-1.5-flash');
+            model = fallback.model;
+            modelName = fallback.modelName;
+          }
+
+          if (attempt < maxRetries) {
+            const delayMs = attempt * 4500; // Wait 4.5s, 9s, 13.5s...
+            console.warn(`[GEMINI] Rate limit reached. Retrying attempt ${attempt}/${maxRetries} in ${delayMs / 1000}s...`);
+            await new Promise(res => setTimeout(res, delayMs));
+            continue;
+          }
+        }
+        throw error;
       }
-      throw error;
     }
   }
 

@@ -92,7 +92,13 @@ router.post('/batch-import-pdf', upload.array('pdfs', 20), async (req, res, next
     const processed = [];
     const errors = [];
 
-    for (const file of req.files) {
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
+      if (i > 0) {
+        await delay(4000);
+      }
       try {
         const saved = await processAndSavePdfRecipe(file.buffer, file.originalname);
         processed.push(saved);
@@ -128,7 +134,13 @@ router.post('/batch-import-folder', async (req, res, next) => {
     const processed = [];
     const errors = [];
 
-    for (const fileName of pdfFiles) {
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+    for (let i = 0; i < pdfFiles.length; i++) {
+      const fileName = pdfFiles[i];
+      if (i > 0) {
+        await delay(4000);
+      }
       try {
         const filePath = path.join(targetDir, fileName);
         const buffer = await fs.readFile(filePath);
