@@ -119,7 +119,8 @@ class GeminiService {
           // Rate limit / 429 / quota exceeded -> wait and retry THIS model
           if (msg.includes('quota') || msg.includes('limit') || msg.includes('429') || msg.includes('resource_exhausted')) {
             const delayMs = attempt * 5000;
-            console.warn(`[GEMINI] Model '${modelName}' rate limited (attempt ${attempt}/${maxRetriesPerModel}). Retrying in ${delayMs / 1000}s...`);
+            const detailedReason = error.message ? error.message.replace(/\s+/g, ' ').trim() : 'Quota or rate limit exceeded';
+            console.warn(`[GEMINI RATE LIMIT] Model '${modelName}' hit rate limit (attempt ${attempt}/${maxRetriesPerModel}). Details: "${detailedReason}". Pausing ${delayMs / 1000}s before retry...`);
             await new Promise(res => setTimeout(res, delayMs));
             continue;
           }
