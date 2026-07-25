@@ -49,11 +49,15 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 console.log('[INIT 5/6] Mounting API routes...');
 try {
+  console.log('[INIT 5a/6] Mounting /api/context...');
   app.use('/api/context', require('./routes/context'));
+  console.log('[INIT 5b/6] Mounting /api/recipes...');
   app.use('/api/recipes', require('./routes/recipes'));
+  console.log('[INIT 5c/6] Mounting /api/plan...');
   app.use('/api/plan', require('./routes/plan'));
+  console.log('[INIT 5d/6] Mounting /api/grocery...');
   app.use('/api/grocery', require('./routes/grocery'));
-  console.log('[INIT 5/6] All API routes mounted.');
+  console.log('[INIT 5e/6] All API routes successfully mounted.');
 } catch (err) {
   console.error('[FATAL] Error mounting API routes:', err);
 }

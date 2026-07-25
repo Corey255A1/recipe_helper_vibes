@@ -7,7 +7,6 @@ const config = require('../config');
 const path = require('path');
 const fs = require('fs').promises;
 const multer = require('multer');
-const pdfParse = require('pdf-parse');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
