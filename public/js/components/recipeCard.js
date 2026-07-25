@@ -100,14 +100,21 @@ const RecipeCard = {
       }
 
       content.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem;">
-          <h2 style="margin: 0; font-size: 1.4rem;">${recipe.title}</h2>
-          <button class="btn btn-outline" style="padding: 0.35rem 0.65rem; font-size: 1.1rem; line-height: 1; border-radius: 0.5rem; color: var(--text-muted);" onclick="RecipeCard.closeModal()" title="Close">✕</button>
+        <!-- Top Back Navigation Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+          <button class="btn btn-outline" style="padding: 0.45rem 0.9rem; font-size: 0.875rem; display: flex; align-items: center; gap: 0.35rem;" onclick="RecipeCard.closeModal()">
+            ← Back
+          </button>
+          <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Recipe Details</span>
+          <button class="btn btn-outline" style="padding: 0.35rem 0.6rem; font-size: 1rem; line-height: 1; border-radius: 0.5rem; color: var(--text-muted);" onclick="RecipeCard.closeModal()" title="Close">✕</button>
         </div>
-        <div class="recipe-meta" style="margin-bottom: 1rem;">
-          <span>⏱️ Prep: ${recipe.prepTime || 0}m</span>
-          <span>🔥 Cook: ${recipe.cookTime || 0}m</span>
-          <span>🍽️ ${recipe.servings || 4} servings</span>
+
+        <h2 style="margin-top: 0; margin-bottom: 0.75rem; font-size: 1.5rem; color: #f8fafc; line-height: 1.3;">${recipe.title}</h2>
+
+        <div class="recipe-meta" style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <span style="background: rgba(255,255,255,0.05); padding: 0.3rem 0.65rem; border-radius: 0.5rem; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.08);">⏱️ Prep: ${recipe.prepTime || 0}m</span>
+          <span style="background: rgba(255,255,255,0.05); padding: 0.3rem 0.65rem; border-radius: 0.5rem; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.08);">🔥 Cook: ${recipe.cookTime || 0}m</span>
+          <span style="background: rgba(255,255,255,0.05); padding: 0.3rem 0.65rem; border-radius: 0.5rem; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.08);">🍽️ ${recipe.servings || 4} servings</span>
         </div>
         <div class="tags" style="margin-bottom: 1.25rem;">${tags}</div>
         
@@ -116,25 +123,30 @@ const RecipeCard = {
           ${sourceLinkHtml}
         </div>
 
-        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">Ingredients</h3>
-        <ul style="margin-bottom: 1.5rem; padding-left: 1.25rem;">
-          ${(recipe.ingredients || []).map(i => `<li style="margin-bottom: 0.25rem;">${i}</li>`).join('')}
+        <h3 style="font-size: 1.15rem; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border); padding-bottom: 0.35rem; color: var(--accent-cyan);">Ingredients</h3>
+        <ul style="margin-bottom: 1.75rem; padding-left: 1.25rem; line-height: 1.6;">
+          ${(recipe.ingredients || []).map(i => `<li style="margin-bottom: 0.4rem; font-size: 0.95rem;">${i}</li>`).join('')}
         </ul>
 
-        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">Instructions</h3>
-        <ol style="margin-bottom: 1.5rem; padding-left: 1.25rem;">
-          ${(recipe.instructions || []).map(i => `<li style="margin-bottom: 0.5rem;">${i}</li>`).join('')}
+        <h3 style="font-size: 1.15rem; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border); padding-bottom: 0.35rem; color: var(--accent-cyan);">Instructions</h3>
+        <ol style="margin-bottom: 1.75rem; padding-left: 1.25rem; line-height: 1.65;">
+          ${(recipe.instructions || []).map(i => `<li style="margin-bottom: 0.6rem; font-size: 0.95rem;">${i}</li>`).join('')}
         </ol>
 
         ${recipe.notes ? `
-          <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">Notes</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">${recipe.notes}</p>
+          <h3 style="font-size: 1.15rem; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border); padding-bottom: 0.35rem; color: var(--accent-cyan);">Notes</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">${recipe.notes}</p>
         ` : ''}
 
         <!-- Bottom Actions Footer -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
-          <button class="btn btn-outline" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); font-size: 0.85rem;" onclick="RecipesView.deleteRecipe('${recipe.id}', '${recipe.title.replace(/'/g, "\\'")}')">🗑️ Delete Recipe</button>
-          <button class="btn btn-outline" style="font-size: 0.85rem;" onclick="RecipeCard.closeModal()">Close</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); gap: 0.75rem; flex-wrap: wrap;">
+          <button class="btn btn-outline" style="padding: 0.65rem 1.25rem; font-size: 0.9rem; flex: 1; text-align: center;" onclick="RecipeCard.closeModal()">
+            ← Back to Previous Page
+          </button>
+          
+          <button class="btn btn-outline" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); font-size: 0.85rem; padding: 0.65rem 1rem;" onclick="RecipesView.deleteRecipe('${recipe.id}', '${recipe.title.replace(/'/g, "\\'")}')">
+            🗑️ Delete Recipe
+          </button>
         </div>
       `;
 
