@@ -258,7 +258,7 @@ const PlanView = {
               
               <div class="day-list-meals">
                 ${meals.length > 0 ? meals.map(m => {
-                  const cleanTitle = m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                  const cleanTitle = m.title || m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                   const typeIcon = m.mealType === 'Breakfast' ? '🥞' : m.mealType === 'Lunch' ? '🥗' : m.mealType === 'Snack' ? '🥨' : m.mealType === 'Dessert' ? '🍰' : '🍽️';
                   
                   return `

@@ -57,6 +57,23 @@ async function getPlans() {
     // Sort plans chronologically
     plans.sort((a, b) => new Date(a.weekOf) - new Date(b.weekOf));
 
+    // Enrich meals with actual recipe titles from cache
+    try {
+      const cachedList = await recipeCache.list();
+      const cacheMap = {};
+      cachedList.forEach(r => { if (r.id && r.title) cacheMap[r.id] = r.title; });
+
+      plans.forEach(p => {
+        if (p.meals && Array.isArray(p.meals)) {
+          p.meals.forEach(m => {
+            if (!m.title || m.title.startsWith('recipe_') || m.title.startsWith('recipe-')) {
+              m.title = cacheMap[m.recipeId] || m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            }
+          });
+        }
+      });
+    } catch (e) {}
+
     return plans;
   } catch (error) {
     if (error.code === 'ENOENT') {
@@ -217,9 +234,11 @@ router.post('/decide', async (req, res, next) => {
       if (existingMeal) {
         existingMeal.assignedDays = d.assignedDays || [];
         if (d.mealType) existingMeal.mealType = d.mealType;
+        if (suggestion && suggestion.title) existingMeal.title = suggestion.title;
       } else if (d.decision === 'yes' && suggestion) {
         targetWeek.meals.push({
           recipeId: suggestion.id,
+          title: suggestion.title,
           assignedDays: d.assignedDays || [],
           servings: suggestion.servings,
           mealType: d.mealType || 'Dinner'
