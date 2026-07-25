@@ -2,12 +2,12 @@ const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 const config = require('../config');
 const fs = require('fs').promises;
 
-// Candidate models to try in order of preference
+// Official candidate models in order of preference
 const CANDIDATE_MODELS = [
-  'gemini-2.5-flash',
   'gemini-2.0-flash',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-pro-latest'
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro'
 ];
 
 // Recipe schema for suggestions
@@ -84,7 +84,7 @@ class GeminiService {
     return apiKey;
   }
 
-  async generateContentWithFallback(requestData) {
+  async generateContentWithFallback(requestData, maxRetriesPerModel = 3) {
     const apiKey = await this.getApiKey();
     const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -96,28 +96,37 @@ class GeminiService {
     let lastError = null;
 
     for (const modelName of modelsToTry) {
+      let generativeModel;
       try {
-        const generativeModel = genAI.getGenerativeModel({ model: modelName });
-        return await generativeModel.generateContent(requestData);
-      } catch (error) {
-        lastError = error;
-        const msg = (error.message || '').toLowerCase();
+        generativeModel = genAI.getGenerativeModel({ model: modelName });
+      } catch (e) {
+        continue;
+      }
 
-        // If rate limit / quota 429
-        if (msg.includes('quota') || msg.includes('limit') || msg.includes('429') || msg.includes('resource_exhausted')) {
-          console.warn(`[GEMINI] Model '${modelName}' rate limited or quota exceeded. Waiting 3s and trying next candidate...`);
-          await new Promise(res => setTimeout(res, 3000));
-          continue;
+      for (let attempt = 1; attempt <= maxRetriesPerModel; attempt++) {
+        try {
+          return await generativeModel.generateContent(requestData);
+        } catch (error) {
+          lastError = error;
+          const msg = (error.message || '').toLowerCase();
+
+          // 404 Not Found or Unsupported model -> skip to next model candidate
+          if (msg.includes('404') || msg.includes('not found') || msg.includes('not supported')) {
+            console.warn(`[GEMINI] Model '${modelName}' not found (404). Trying next candidate...`);
+            break;
+          }
+
+          // Rate limit / 429 / quota exceeded -> wait and retry THIS model
+          if (msg.includes('quota') || msg.includes('limit') || msg.includes('429') || msg.includes('resource_exhausted')) {
+            const delayMs = attempt * 5000;
+            console.warn(`[GEMINI] Model '${modelName}' rate limited (attempt ${attempt}/${maxRetriesPerModel}). Retrying in ${delayMs / 1000}s...`);
+            await new Promise(res => setTimeout(res, delayMs));
+            continue;
+          }
+
+          // For any other fatal error, rethrow
+          throw error;
         }
-
-        // If 404 Not Found or unsupported model
-        if (msg.includes('404') || msg.includes('not found') || msg.includes('not supported')) {
-          console.warn(`[GEMINI] Model '${modelName}' not found (404). Trying next model candidate...`);
-          continue;
-        }
-
-        // For any other fatal error, rethrow
-        throw error;
       }
     }
 
