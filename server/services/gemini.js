@@ -2,6 +2,14 @@ const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 const config = require('../config');
 const fs = require('fs').promises;
 
+// Candidate models to try in order of preference
+const CANDIDATE_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-pro-latest'
+];
+
 // Recipe schema for suggestions
 const recipeSchema = {
   type: SchemaType.ARRAY,
@@ -56,21 +64,15 @@ const grocerySchema = {
 
 
 class GeminiService {
-  async getModel(overrideModel) {
+  async getApiKey() {
     let apiKey = process.env.GEMINI_API_KEY || config.geminiApiKey;
-    let selectedModel = overrideModel || process.env.GEMINI_MODEL;
 
-    if (!apiKey || apiKey === 'your_gemini_api_key_here' || !selectedModel) {
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
       try {
         const contextData = await fs.readFile(config.dataPaths.context, 'utf-8');
         const context = JSON.parse(contextData);
-        if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-          if (context.geminiApiKey && context.geminiApiKey !== 'your_gemini_api_key_here') {
-            apiKey = context.geminiApiKey;
-          }
-        }
-        if (!selectedModel && context.geminiModel) {
-          selectedModel = context.geminiModel;
+        if (context.geminiApiKey && context.geminiApiKey !== 'your_gemini_api_key_here') {
+          apiKey = context.geminiApiKey;
         }
       } catch (e) {}
     }
@@ -79,39 +81,47 @@ class GeminiService {
       throw new Error('Gemini API key is not configured. Please set GEMINI_API_KEY environment variable or save it in app settings.');
     }
 
-    const modelName = selectedModel || "gemini-1.5-flash";
-    const genAI = new GoogleGenerativeAI(apiKey);
-    return { model: genAI.getGenerativeModel({ model: modelName }), modelName };
+    return apiKey;
   }
 
-  async generateContentWithFallback(requestData, maxRetries = 3) {
-    let { model, modelName } = await this.getModel();
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        return await model.generateContent(requestData);
-      } catch (error) {
-        const msg = (error.message || '').toLowerCase();
-        const isRateLimit = msg.includes('quota') || msg.includes('limit') || msg.includes('429') || msg.includes('resource_exhausted');
-        
-        if (isRateLimit) {
-          if (modelName !== 'gemini-1.5-flash') {
-            console.warn(`[GEMINI] Model ${modelName} hit rate limit. Switching to gemini-1.5-flash...`);
-            const fallback = await this.getModel('gemini-1.5-flash');
-            model = fallback.model;
-            modelName = fallback.modelName;
-          }
+  async generateContentWithFallback(requestData) {
+    const apiKey = await this.getApiKey();
+    const genAI = new GoogleGenerativeAI(apiKey);
 
-          if (attempt < maxRetries) {
-            const delayMs = attempt * 4500; // Wait 4.5s, 9s, 13.5s...
-            console.warn(`[GEMINI] Rate limit reached. Retrying attempt ${attempt}/${maxRetries} in ${delayMs / 1000}s...`);
-            await new Promise(res => setTimeout(res, delayMs));
-            continue;
-          }
+    const userModel = process.env.GEMINI_MODEL;
+    const modelsToTry = userModel 
+      ? [userModel, ...CANDIDATE_MODELS.filter(m => m !== userModel)]
+      : CANDIDATE_MODELS;
+
+    let lastError = null;
+
+    for (const modelName of modelsToTry) {
+      try {
+        const generativeModel = genAI.getGenerativeModel({ model: modelName });
+        return await generativeModel.generateContent(requestData);
+      } catch (error) {
+        lastError = error;
+        const msg = (error.message || '').toLowerCase();
+
+        // If rate limit / quota 429
+        if (msg.includes('quota') || msg.includes('limit') || msg.includes('429') || msg.includes('resource_exhausted')) {
+          console.warn(`[GEMINI] Model '${modelName}' rate limited or quota exceeded. Waiting 3s and trying next candidate...`);
+          await new Promise(res => setTimeout(res, 3000));
+          continue;
         }
+
+        // If 404 Not Found or unsupported model
+        if (msg.includes('404') || msg.includes('not found') || msg.includes('not supported')) {
+          console.warn(`[GEMINI] Model '${modelName}' not found (404). Trying next model candidate...`);
+          continue;
+        }
+
+        // For any other fatal error, rethrow
         throw error;
       }
     }
+
+    throw lastError || new Error('All Gemini model candidates failed.');
   }
 
   async generateSuggestions(context, history, cacheSummaries, neededMeals, mealType = '') {
