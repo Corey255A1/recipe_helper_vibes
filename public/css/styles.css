@@ -1064,45 +1064,26 @@ input:focus, textarea:focus, select:focus {
     flex: 1 1 30%;
   }
 
-  /* Section Spacing & AI Category Pill Scroll Container */
-  #suggest-category-bar, .scroll-pill-container {
+  /* AI Category Pill Wrapping Container */
+  #suggest-category-bar {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.4rem;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    align-items: center;
     max-width: 100%;
-    padding-bottom: 0.25rem;
-    -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
-    mask-image: linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
-  }
-
-  #suggest-category-bar::-webkit-scrollbar, .scroll-pill-container::-webkit-scrollbar {
-    display: none;
   }
 
   #suggest-category-bar .btn {
     white-space: nowrap;
-    flex-shrink: 0;
   }
 }
 
 /* Category Pill Container (Base) */
-#suggest-category-bar, .scroll-pill-container {
+#suggest-category-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  align-items: center;
   max-width: 100%;
-  padding-bottom: 0.25rem;
-  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
-  mask-image: linear-gradient(to right, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
-}
-
-#suggest-category-bar::-webkit-scrollbar, .scroll-pill-container::-webkit-scrollbar {
-  display: none;
 }
 

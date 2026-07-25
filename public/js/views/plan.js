@@ -71,7 +71,7 @@ const PlanView = {
               </div>
               
               <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                <div id="suggest-category-bar" style="display: flex; gap: 0.35rem; overflow-x: auto;">
+                <div id="suggest-category-bar" style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
                    <button class="btn btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('')">All</button>
                    <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Breakfast')">🥞 Breakfast</button>
                    <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Lunch')">🥗 Lunch</button>
