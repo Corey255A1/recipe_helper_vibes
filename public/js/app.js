@@ -2,8 +2,10 @@ const App = {
   views: {
     context: ContextView,
     plan: PlanView,
+    pantry: PantryView,
     grocery: GroceryView,
-    recipes: RecipesView
+    recipes: RecipesView,
+    matrix: MatrixView
   },
   
   async init() {
@@ -14,28 +16,14 @@ const App = {
       root.insertAdjacentHTML('beforeend', html);
     }
     
-    // Set up navigation
-    const mainNav = document.getElementById('main-nav');
-    const menuToggle = document.getElementById('menu-toggle');
-    
-    if (menuToggle && mainNav) {
-      menuToggle.addEventListener('click', () => {
-        mainNav.classList.toggle('open');
-      });
-    }
-
-    document.querySelectorAll('nav a').forEach(link => {
+    // Set up navigation on both desktop top nav and mobile bottom nav
+    document.querySelectorAll('nav a[data-route]').forEach(link => {
       link.addEventListener('click', (e) => {
         const route = e.currentTarget.dataset.route;
         if (route) {
           e.preventDefault();
           this.navigate(route);
           history.pushState({ route }, '', route === 'recipes' ? '/' : `#${route}`);
-          
-          // Close menu on mobile after selection
-          if (mainNav) {
-            mainNav.classList.remove('open');
-          }
         }
       });
     });
@@ -43,24 +31,38 @@ const App = {
     window.addEventListener('popstate', (e) => {
       if (e.state && e.state.route) {
         this.navigate(e.state.route);
+      } else {
+        const hash = window.location.hash.replace('#', '');
+        this.navigate(this.views[hash] ? hash : 'recipes');
       }
     });
 
     // Determine initial route
     const hash = window.location.hash.replace('#', '');
-    this.navigate(this.views[hash] ? hash : 'recipes');
+    await this.navigate(this.views[hash] ? hash : 'recipes');
+
+    // Update mobile grocery badge in background
+    if (window.GroceryView && GroceryView.updateMobileBadge) {
+      GroceryView.updateMobileBadge();
+    }
   },
   
   async navigate(route) {
-    // Update active nav link
-    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-    const activeLink = document.querySelector(`nav a[data-route="${route}"]`);
-    if (activeLink) activeLink.classList.add('active');
+    // Update active link on both desktop and mobile navs
+    document.querySelectorAll('nav a[data-route]').forEach(a => {
+      if (a.dataset.route === route) {
+        a.classList.add('active');
+      } else {
+        a.classList.remove('active');
+      }
+    });
     
     // Show correct view
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById(`${route}-view`).classList.add('active');
+    const targetViewEl = document.getElementById(`${route}-view`);
+    if (targetViewEl) targetViewEl.classList.add('active');
     document.body.className = `route-${route}`;
+    window.scrollTo({ top: 0, behavior: 'instant' });
     
     // Initialize view data
     if (this.views[route] && this.views[route].init) {
@@ -70,3 +72,4 @@ const App = {
 };
 
 document.addEventListener('DOMContentLoaded', () => App.init());
+window.App = App;

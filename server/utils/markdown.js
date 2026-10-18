@@ -8,14 +8,17 @@ function recipeToMarkdown(recipe) {
     headerContent += `\n\n[View Original PDF](${metadata.pdfPath})`;
   }
 
+  const safeIngredients = Array.isArray(ingredients) ? ingredients : [];
+  const safeInstructions = Array.isArray(instructions) ? instructions : [];
+
   const content = `
 ${headerContent}
 
 ## Ingredients
-${ingredients.map(ing => `- ${ing}`).join('\n')}
+${safeIngredients.map(ing => `- ${ing}`).join('\n')}
 
 ## Instructions
-${instructions.map((step, i) => `${i + 1}. ${step}`).join('\n')}
+${safeInstructions.map((step, i) => `${i + 1}. ${step}`).join('\n')}
 
 ${notes ? `## Notes\n${notes}` : ''}
 `.trim();
@@ -23,12 +26,14 @@ ${notes ? `## Notes\n${notes}` : ''}
   return matter.stringify(content, {
     id: metadata.id,
     title,
-    prepTime: metadata.prepTime,
-    cookTime: metadata.cookTime,
-    totalTime: metadata.totalTime,
-    servings: metadata.servings,
-    tags: metadata.tags || [],
+    prepTime: Number(metadata.prepTime) || 0,
+    cookTime: Number(metadata.cookTime) || 0,
+    totalTime: Number(metadata.totalTime) || ((Number(metadata.prepTime) || 0) + (Number(metadata.cookTime) || 0)) || 20,
+    servings: Number(metadata.servings) || 4,
+    tags: Array.isArray(metadata.tags) ? metadata.tags : [],
     source: metadata.source || '',
+    favorite: Boolean(metadata.favorite),
+    rating: metadata.rating || null,
     addedAt: metadata.addedAt || new Date().toISOString(),
     timesSelected: metadata.timesSelected || 0,
     lastSelected: metadata.lastSelected || null,

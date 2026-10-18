@@ -31,6 +31,39 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// Create a new recipe manually
+router.post('/', async (req, res, next) => {
+  try {
+    const body = req.body || {};
+    if (!body.title || !body.title.trim()) {
+      return res.status(400).json({ error: 'Recipe title is required' });
+    }
+    const id = body.id || slugify(body.title);
+    const prepTime = Number(body.prepTime) || 0;
+    const cookTime = Number(body.cookTime) || 0;
+    const recipe = {
+      id,
+      title: body.title.trim(),
+      prepTime,
+      cookTime,
+      totalTime: Number(body.totalTime) || (prepTime + cookTime) || 20,
+      servings: Number(body.servings) || 4,
+      tags: Array.isArray(body.tags) ? body.tags : [],
+      source: body.source || 'manual',
+      favorite: Boolean(body.favorite),
+      rating: body.rating || null,
+      ingredients: Array.isArray(body.ingredients) ? body.ingredients.filter(Boolean) : [],
+      instructions: Array.isArray(body.instructions) ? body.instructions.filter(Boolean) : [],
+      notes: body.notes || '',
+      addedAt: new Date().toISOString()
+    };
+    const saved = await recipeCache.save(recipe);
+    res.status(201).json(saved);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Serve PDF endpoint
 router.get('/:id/pdf', async (req, res, next) => {
   try {
@@ -52,7 +85,11 @@ router.post('/import-link', async (req, res, next) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; RecipeHelper/1.0)'
+      }
+    });
     if (!response.ok) throw new Error(`Failed to fetch page: ${response.statusText}`);
     const html = await response.text();
 
@@ -77,6 +114,23 @@ router.post('/import-pdf', upload.single('pdf'), async (req, res, next) => {
     if (!req.file) return res.status(400).json({ error: 'PDF file is required' });
 
     const saved = await processAndSavePdfRecipe(req.file.buffer, req.file.originalname);
+    res.json(saved);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/import-image', upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Image file is required' });
+
+    const recipe = await gemini.extractRecipeFromImage(
+      req.file.buffer,
+      req.file.mimetype || 'image/jpeg',
+      req.file.originalname || 'photo'
+    );
+    recipe.id = slugify(recipe.title);
+    const saved = await recipeCache.save(recipe);
     res.json(saved);
   } catch (error) {
     next(error);
@@ -174,96 +228,99 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// Standalone view endpoint for opening in its own window
+router.put('/:id', async (req, res, next) => {
+  try {
+    const existing = await recipeCache.get(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Recipe not found' });
+    }
+
+    const body = req.body || {};
+    const prepTime = body.prepTime !== undefined ? Number(body.prepTime) : existing.prepTime;
+    const cookTime = body.cookTime !== undefined ? Number(body.cookTime) : existing.cookTime;
+
+    const updated = {
+      ...existing,
+      title: body.title !== undefined ? body.title.trim() : existing.title,
+      prepTime,
+      cookTime,
+      totalTime: body.totalTime !== undefined ? Number(body.totalTime) : ((prepTime + cookTime) || existing.totalTime),
+      servings: body.servings !== undefined ? Number(body.servings) : existing.servings,
+      tags: body.tags !== undefined ? body.tags : existing.tags,
+      source: body.source !== undefined ? body.source : existing.source,
+      favorite: body.favorite !== undefined ? Boolean(body.favorite) : Boolean(existing.favorite),
+      rating: body.rating !== undefined ? body.rating : existing.rating,
+      ingredients: body.ingredients !== undefined ? body.ingredients : existing.ingredients,
+      instructions: body.instructions !== undefined ? body.instructions : existing.instructions,
+      notes: body.notes !== undefined ? body.notes : existing.notes,
+      id: existing.id
+    };
+
+    const saved = await recipeCache.save(updated);
+    res.json(saved);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Standalone view endpoint for opening in its own window or popout
 router.get('/:id/view', async (req, res, next) => {
   try {
     const recipe = await recipeCache.get(req.params.id);
     if (!recipe) return res.status(404).send('<h1>Recipe Not Found</h1>');
 
-    const tags = (recipe.tags || []).map(t => `<span style="background: rgba(99, 102, 241, 0.15); color: #818cf8; padding: 0.25rem 0.65rem; border-radius: 1rem; font-size: 0.8rem; margin-right: 0.4rem; display: inline-block;">${t}</span>`).join('');
-    const ingredients = (recipe.ingredients || []).map(i => `<li style="margin-bottom: 0.5rem; line-height: 1.5;">${i}</li>`).join('');
-    const instructions = (recipe.instructions || []).map(i => `<li style="margin-bottom: 0.75rem; line-height: 1.6;">${i}</li>`).join('');
+    const serializedRecipe = JSON.stringify(recipe).replace(/</g, '\\u003c');
 
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${recipe.title} - Recipe Helper</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <style>
-          :root {
-            --bg: #0f172a;
-            --surface: #1e293b;
-            --border: #334155;
-            --primary: #6366f1;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-          }
-          body {
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem 1.5rem;
-            margin: 0;
-            line-height: 1.6;
-          }
-          .container {
-            max-width: 720px;
-            margin: 0 auto;
-            background: var(--surface);
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-          }
-          h1 { font-size: 2rem; margin-top: 0; margin-bottom: 0.75rem; color: var(--text); }
-          .meta { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; }
-          .meta span { background: rgba(255, 255, 255, 0.05); padding: 0.35rem 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.08); }
-          h2 { font-size: 1.3rem; margin-top: 2rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.35rem; color: var(--primary); }
-          ul, ol { padding-left: 1.5rem; }
-          .print-btn { background: var(--primary); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 500; font-family: inherit; margin-bottom: 1.5rem; }
-          .print-btn:hover { opacity: 0.9; }
-          @media print { .print-btn { display: none; } body { background: #fff; color: #000; } .container { border: none; box-shadow: none; padding: 0; } }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <button style="background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.45rem 0.9rem; font-size: 0.9rem; border-radius: 0.5rem; cursor: pointer; font-family: inherit;" onclick="if(history.length>1){history.back();}else{window.location.href='/';}">← Back to Previous Page</button>
-            <button class="print-btn" style="margin: 0;" onclick="window.print()">🖨️ Print / Save PDF</button>
-          </div>
-          <h1>${recipe.title}</h1>
-          <div class="meta">
-            <span>⏱️ Prep: ${recipe.prepTime || 0}m</span>
-            <span>🔥 Cook: ${recipe.cookTime || 0}m</span>
-            <span>🍽️ ${recipe.servings || 4} servings</span>
-          </div>
-          <div style="margin-bottom: 1.5rem;">${tags}</div>
-          
-          ${recipe.pdfPath ? `<p><a href="${recipe.pdfPath}" target="_blank" style="color: var(--primary);">📄 Open Original Uploaded PDF</a></p>` : ''}
-          ${(recipe.source && (recipe.source.startsWith('http://') || recipe.source.startsWith('https://'))) ? `<p><a href="${recipe.source}" target="_blank" style="color: var(--primary);">🌐 View Original Web Source</a></p>` : ''}
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>${recipe.title} - Recipe Helper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="popout-body">
+  <div class="popout-container">
+    <div id="popout-recipe-container"></div>
+  </div>
 
-          <h2>Ingredients</h2>
-          <ul>${ingredients}</ul>
+  <!-- Floating Cook Timer Bar -->
+  <div id="cook-timer-bar" class="cook-timer-bar" style="display: none;">
+    <div class="cook-timer-info">
+      <span class="cook-timer-icon">⏱️</span>
+      <div>
+        <div id="cook-timer-label" class="cook-timer-label">Cooking Timer</div>
+        <div id="cook-timer-display" class="cook-timer-display">00:00</div>
+      </div>
+    </div>
+    <div class="cook-timer-actions">
+      <button class="btn btn-outline btn-sm" id="cook-timer-pause-btn" onclick="RecipeCard.togglePauseTimer()">Pause</button>
+      <button class="btn btn-outline btn-sm" onclick="RecipeCard.addTimerMinute()">+1m</button>
+      <button class="btn btn-sm" style="background: var(--danger);" onclick="RecipeCard.stopTimer()">✕</button>
+    </div>
+  </div>
 
-          <h2>Instructions</h2>
-          <ol>${instructions}</ol>
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
 
-          ${recipe.notes ? `<h2>Notes</h2><p style="color: var(--text-muted);">${recipe.notes}</p>` : ''}
+  <!-- Shared Scripts -->
+  <script src="/js/utils.js"></script>
+  <script src="/js/components/toast.js"></script>
+  <script src="/js/components/recipeCard.js"></script>
+  <script>
+    const RECIPE_DATA = ${serializedRecipe};
+    document.addEventListener('DOMContentLoaded', () => {
+      RecipeCard.initStandalone(RECIPE_DATA);
+    });
+  </script>
+</body>
+</html>`;
 
-          <!-- Bottom Actions -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); gap: 0.75rem; flex-wrap: wrap;">
-            <button style="padding: 0.6rem 1.2rem; color: var(--text); border: 1px solid var(--border); background: var(--surface); border-radius: 0.5rem; cursor: pointer; font-family: inherit; font-size: 0.9rem;" onclick="if(history.length>1){history.back();}else{window.location.href='/';}">← Back to Previous Page</button>
-            <button style="padding: 0.6rem 1rem; color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); background: transparent; border-radius: 0.5rem; cursor: pointer; font-family: inherit; font-size: 0.85rem;" onclick="if(confirm('Are you sure you want to delete this recipe? This will delete the markdown file and associated PDF.')) { fetch('/api/recipes/${recipe.id}', {method: 'DELETE'}).then(res => { if(res.ok) { alert('Recipe deleted.'); window.location.href='/'; } else alert('Failed to delete'); }) }">🗑️ Delete Recipe</button>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
   } catch (error) {

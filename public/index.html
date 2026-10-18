@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#090d16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Recipes">
+    <link rel="manifest" href="/manifest.json">
     <title>Recipe Helper</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,17 +18,18 @@
     <header>
         <div class="container" style="position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <div class="brand">
+                <div class="brand" onclick="App.navigate('recipes'); history.pushState({route:'recipes'}, '', '/');" style="cursor: pointer;">
                     <span class="brand-icon">🍳</span>
                     <h1>Recipe Helper</h1>
                 </div>
-                <button id="menu-toggle" class="btn btn-outline" style="padding: 0.4rem 0.6rem; font-size: 1.25rem;">☰</button>
             </div>
             <nav id="main-nav">
-                <a href="/" class="nav-link" data-route="recipes"><span class="step-num">1</span> Library</a>
-                <a href="#plan" class="nav-link" data-route="plan"><span class="step-num">2</span> Meal Plan</a>
-                <a href="#grocery" class="nav-link" data-route="grocery"><span class="step-num">3</span> Shop</a>
-                <a href="#context" class="nav-link" data-route="context"><span class="step-num">4</span> Preferences</a>
+                <a href="/" class="nav-link" data-route="recipes"><span class="step-num">📖</span> Library</a>
+                <a href="#plan" class="nav-link" data-route="plan"><span class="step-num">📅</span> Meal Plan</a>
+                <a href="#pantry" class="nav-link" data-route="pantry"><span class="step-num">🥫</span> Pantry</a>
+                <a href="#grocery" class="nav-link" data-route="grocery"><span class="step-num">🛒</span> Shop</a>
+                <a href="#matrix" class="nav-link" data-route="matrix"><span class="step-num">📊</span> Matrix</a>
+                <a href="#context" class="nav-link" data-route="context"><span class="step-num">⚙️</span> Settings</a>
             </nav>
         </div>
     </header>
@@ -32,51 +38,270 @@
         <!-- Content injected here by app.js -->
     </main>
 
-    <!-- Day Selector Modal -->
-    <div id="day-modal" class="modal-overlay">
-        <div class="modal-card">
-            <h3>Assign Days for this Meal</h3>
-            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">Select the day(s) you plan to eat this meal. Multi-day selection works great for leftovers!</p>
-            <div id="day-modal-week-group" style="margin-bottom: 1.25rem;">
-                <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Target Week</h4>
-                <select id="day-modal-week-select" style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.9rem;" onchange="PlanView.onDayModalWeekChange(this.value)">
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav id="mobile-bottom-nav" aria-label="Mobile Navigation">
+        <a href="/" class="mobile-nav-item" data-route="recipes">
+            <span class="mobile-nav-icon">📖</span>
+            <span class="mobile-nav-label">Library</span>
+        </a>
+        <a href="#plan" class="mobile-nav-item" data-route="plan">
+            <span class="mobile-nav-icon">📅</span>
+            <span class="mobile-nav-label">Plan</span>
+        </a>
+        <a href="#pantry" class="mobile-nav-item" data-route="pantry">
+            <span class="mobile-nav-icon">🥫</span>
+            <span class="mobile-nav-label">Pantry</span>
+        </a>
+        <a href="#grocery" class="mobile-nav-item" data-route="grocery">
+            <span class="mobile-nav-icon">🛒</span>
+            <span class="mobile-nav-label">Shop</span>
+            <span id="mobile-grocery-badge" class="mobile-nav-badge" style="display: none;">0</span>
+        </a>
+        <a href="#context" class="mobile-nav-item" data-route="context">
+            <span class="mobile-nav-icon">⚙️</span>
+            <span class="mobile-nav-label">Settings</span>
+        </a>
+    </nav>
+
+    <!-- Floating Cook Timer Bar -->
+    <div id="cook-timer-bar" class="cook-timer-bar" style="display: none;">
+        <div class="cook-timer-info">
+            <span class="cook-timer-icon">⏱️</span>
+            <div>
+                <div id="cook-timer-label" class="cook-timer-label">Cooking Timer</div>
+                <div id="cook-timer-display" class="cook-timer-display">00:00</div>
+            </div>
+        </div>
+        <div class="cook-timer-actions">
+            <button class="btn btn-outline btn-sm" id="cook-timer-pause-btn" onclick="RecipeCard.togglePauseTimer()">Pause</button>
+            <button class="btn btn-outline btn-sm" onclick="RecipeCard.addTimerMinute()">+1m</button>
+            <button class="btn btn-sm" style="background: var(--danger);" onclick="RecipeCard.stopTimer()">✕</button>
+        </div>
+    </div>
+
+    <!-- Day Selector Modal (Mobile Optimized) -->
+    <div id="day-modal" class="modal-overlay" onclick="if(event.target===this) PlanView.closeDayModal()">
+        <div class="modal-card" style="max-width: 520px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-drag-pill"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
+                <h3 id="day-modal-title" style="margin: 0; font-size: 1.15rem;">📅 Plan Meal for Day(s)</h3>
+                <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.9rem;" onclick="PlanView.closeDayModal()">✕</button>
+            </div>
+            
+            <!-- Recipe Selection Card / Banner -->
+            <div id="day-modal-recipe-banner" style="background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 0.65rem; padding: 0.65rem 0.85rem; margin-bottom: 0.85rem;">
+                <div style="font-size: 0.725rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.2rem;">Recipe</div>
+                <div id="day-modal-recipe-name" style="color: var(--text); font-weight: 600; font-size: 0.95rem;"></div>
+                
+                <!-- Recipe picker dropdown when opened from empty day "+ Add" -->
+                <div id="day-modal-recipe-select-group" style="display: none; margin-top: 0.4rem;">
+                    <select id="day-modal-recipe-select" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 0.5rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 0.875rem;" onchange="PlanView.onModalRecipeChange(this.value)">
+                    </select>
+                </div>
+            </div>
+
+            <!-- Target Week Dropdown -->
+            <div id="day-modal-week-group" style="margin-bottom: 0.85rem;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px;">Schedule / Target Plan</label>
+                <select id="day-modal-week-select" style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 0.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.875rem;" onchange="PlanView.onDayModalWeekChange(this.value)">
                 </select>
             </div>
 
-            <div class="meal-type-selector" style="margin-bottom: 1.5rem;">
-                <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Meal Type</h4>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="meal-type-radios">
-                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Breakfast"> <span>🥞 Breakfast</span></label>
-                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Lunch"> <span>🥗 Lunch</span></label>
-                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Dinner" checked> <span>🍽️ Dinner</span></label>
-                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Snack"> <span>🥨 Snack</span></label>
-                    <label class="day-chip type-chip"><input type="radio" name="mealType" value="Dessert"> <span>🍰 Dessert</span></label>
+            <!-- Meal Type Segmented Control -->
+            <div class="meal-type-selector" style="margin-bottom: 0.85rem;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.5px;">Meal Type</label>
+                <div id="meal-type-radios" class="meal-type-scroll">
+                    <label class="meal-type-chip"><input type="radio" name="mealType" value="Breakfast"> <span>🥞 Breakfast</span></label>
+                    <label class="meal-type-chip"><input type="radio" name="mealType" value="Lunch"> <span>🥗 Lunch</span></label>
+                    <label class="meal-type-chip"><input type="radio" name="mealType" value="Dinner" checked> <span>🍽️ Dinner</span></label>
+                    <label class="meal-type-chip"><input type="radio" name="mealType" value="Snack"> <span>🥨 Snack</span></label>
+                    <label class="meal-type-chip"><input type="radio" name="mealType" value="Dessert"> <span>🍰 Dessert</span></label>
+                </div>
+            </div>
+
+            <!-- Multiplier / Recipe Portion Scaler -->
+            <div class="multiplier-selector" style="margin-bottom: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Portion Multiplier</label>
+                    <span id="day-modal-servings-preview" style="font-size: 0.8rem; color: var(--accent-cyan); font-weight: 600;">4 servings (1x)</span>
+                </div>
+                <div id="day-modal-multiplier-chips" class="multiplier-chips-row" style="display: flex; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.2rem;">
+                    <button type="button" class="btn btn-outline btn-sm day-multiplier-btn" data-multiplier="0.5" onclick="PlanView.setModalMultiplier(0.5)">½x</button>
+                    <button type="button" class="btn btn-sm day-multiplier-btn active" data-multiplier="1" onclick="PlanView.setModalMultiplier(1)">1x</button>
+                    <button type="button" class="btn btn-outline btn-sm day-multiplier-btn" data-multiplier="1.5" onclick="PlanView.setModalMultiplier(1.5)">1.5x</button>
+                    <button type="button" class="btn btn-outline btn-sm day-multiplier-btn" data-multiplier="2" onclick="PlanView.setModalMultiplier(2)">2x</button>
+                    <button type="button" class="btn btn-outline btn-sm day-multiplier-btn" data-multiplier="3" onclick="PlanView.setModalMultiplier(3)">3x</button>
+                    <button type="button" class="btn btn-outline btn-sm day-multiplier-btn" data-multiplier="4" onclick="PlanView.setModalMultiplier(4)">4x</button>
+                </div>
+                <input type="hidden" id="day-modal-multiplier-input" value="1">
+            </div>
+            
+            <!-- Day Checkboxes Header with Quick Select -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Days to Assign</label>
+                <div style="display: flex; gap: 0.35rem;">
+                    <button type="button" class="btn btn-outline btn-sm" style="padding: 0.15rem 0.55rem; font-size: 0.725rem;" onclick="PlanView.selectModalAllDays(true)">Select All</button>
+                    <button type="button" class="btn btn-outline btn-sm" style="padding: 0.15rem 0.55rem; font-size: 0.725rem;" onclick="PlanView.selectModalAllDays(false)">Clear</button>
                 </div>
             </div>
             
-            <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Days</h4>
+            <div class="day-checkboxes" id="day-modal-checkboxes"></div>
             
-            <div class="day-checkboxes">
-                <label class="day-chip"><input type="checkbox" value="Monday"> <span>Mon</span></label>
-                <label class="day-chip"><input type="checkbox" value="Tuesday"> <span>Tue</span></label>
-                <label class="day-chip"><input type="checkbox" value="Wednesday"> <span>Wed</span></label>
-                <label class="day-chip"><input type="checkbox" value="Thursday"> <span>Thu</span></label>
-                <label class="day-chip"><input type="checkbox" value="Friday"> <span>Fri</span></label>
-                <label class="day-chip"><input type="checkbox" value="Saturday"> <span>Sat</span></label>
-                <label class="day-chip"><input type="checkbox" value="Sunday"> <span>Sun</span></label>
-            </div>
-            
-            <div class="modal-actions" style="margin-top: 2rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
-                <button class="btn btn-outline" onclick="PlanView.closeDayModal()">Cancel</button>
-                <button class="btn" onclick="PlanView.saveDaySelection()">Confirm & Add</button>
+            <div class="modal-actions" style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="btn btn-outline" style="padding: 0.55rem 1rem;" onclick="PlanView.closeDayModal()">Cancel</button>
+                <button class="btn" id="day-modal-save-btn" style="flex: 1; padding: 0.55rem 1rem; background: var(--success);" onclick="PlanView.saveDaySelection()">✓ Confirm & Save</button>
             </div>
         </div>
     </div>
 
-    <!-- Recipe Details Modal -->
-    <div id="recipe-modal" class="modal-overlay">
-        <div class="modal-card" style="max-width: 600px; max-height: 85vh; overflow-y: auto;">
+    <!-- Plan Start Date & Days Range Modal -->
+    <div id="plan-dates-modal" class="modal-overlay" onclick="if(event.target===this) PlanView.closeDatesModal()">
+        <div class="modal-card" style="max-width: 480px;">
+            <div class="modal-drag-pill"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                <h3 id="plan-dates-modal-title" style="margin: 0;">📅 Meal Plan Schedule</h3>
+                <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.95rem;" onclick="PlanView.closeDatesModal()">✕</button>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label for="plan-dates-start" style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem;">Starting Date</label>
+                <input type="date" id="plan-dates-start" style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.6rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.95rem;" onchange="PlanView.updateDatesPreview()">
+                
+                <div style="display: flex; gap: 0.4rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="PlanView.setQuickStartDate('today')">Today</button>
+                    <button type="button" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="PlanView.setQuickStartDate('tomorrow')">Tomorrow</button>
+                    <button type="button" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="PlanView.setQuickStartDate('nextMonday')">Next Monday</button>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem;">Duration / Number of Days</label>
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.6rem;" id="plan-duration-chips">
+                    <button type="button" class="btn btn-outline duration-chip" onclick="PlanView.setDaysCount(3)">3 Days</button>
+                    <button type="button" class="btn btn-outline duration-chip" onclick="PlanView.setDaysCount(5)">5 Days</button>
+                    <button type="button" class="btn btn-outline duration-chip" onclick="PlanView.setDaysCount(7)">7 Days (1 Wk)</button>
+                    <button type="button" class="btn btn-outline duration-chip" onclick="PlanView.setDaysCount(10)">10 Days</button>
+                    <button type="button" class="btn btn-outline duration-chip" onclick="PlanView.setDaysCount(14)">14 Days (2 Wks)</button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <button type="button" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 1.1rem; font-weight: bold;" onclick="PlanView.adjustDaysCount(-1)">−</button>
+                    <input type="number" id="plan-dates-count" min="1" max="31" value="7" style="width: 80px; text-align: center; padding: 0.5rem; border-radius: 0.6rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 1rem; font-weight: 600;" onchange="PlanView.updateDatesPreview()" oninput="PlanView.updateDatesPreview()">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">days</span>
+                    <button type="button" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 1.1rem; font-weight: bold;" onclick="PlanView.adjustDaysCount(1)">+</button>
+                </div>
+            </div>
+
+            <!-- Live Range Preview Box -->
+            <div id="plan-dates-preview" style="background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 0.6rem; padding: 0.75rem 1rem; margin-bottom: 1.25rem;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-cyan); font-weight: 600;">Plan Period</div>
+                <div id="plan-dates-preview-text" style="font-size: 0.95rem; font-weight: 600; color: var(--text); margin-top: 0.2rem;">Oct 18 – Oct 24 (7 days)</div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                <button type="button" class="btn btn-outline" onclick="PlanView.closeDatesModal()">Cancel</button>
+                <button type="button" class="btn" id="plan-dates-submit-btn" onclick="PlanView.savePlanDates()">Save Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Details / Interactive Cook Mode Modal -->
+    <div id="recipe-modal" class="modal-overlay" onclick="if(event.target===this) RecipeCard.closeModal()">
+        <div class="modal-card" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
             <div id="recipe-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Create / Edit Recipe Modal -->
+    <div id="recipe-edit-modal" class="modal-overlay" onclick="if(event.target===this) RecipesView.closeEditModal()">
+        <div class="modal-card" style="max-width: 620px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-drag-pill"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                <h3 id="recipe-edit-modal-title" style="margin: 0;">✏️ Edit Recipe</h3>
+                <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.95rem;" onclick="RecipesView.closeEditModal()">✕</button>
+            </div>
+            <form id="recipe-edit-form" onsubmit="RecipesView.saveEditedRecipe(event)">
+                <input type="hidden" id="edit-recipe-id">
+                <div class="form-group">
+                    <label for="edit-recipe-title">Recipe Title *</label>
+                    <input type="text" id="edit-recipe-title" required placeholder="e.g., Honey Garlic Glazed Salmon">
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                    <div class="form-group">
+                        <label for="edit-recipe-prep">Prep (mins)</label>
+                        <input type="number" id="edit-recipe-prep" min="0" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-recipe-cook">Cook (mins)</label>
+                        <input type="number" id="edit-recipe-cook" min="0" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-recipe-servings">Servings</label>
+                        <input type="number" id="edit-recipe-servings" min="1" value="4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-recipe-tags">Tags (comma-separated)</label>
+                    <input type="text" id="edit-recipe-tags" placeholder="e.g., seafood, quick, weeknight, healthy">
+                </div>
+                <div class="form-group">
+                    <label for="edit-recipe-ingredients">Ingredients (one per line)</label>
+                    <textarea id="edit-recipe-ingredients" rows="6" placeholder="2 lbs salmon fillets&#10;3 cloves garlic, minced&#10;2 tbsp honey&#10;1 tbsp soy sauce"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-recipe-instructions">Instructions (one step per line)</label>
+                    <textarea id="edit-recipe-instructions" rows="6" placeholder="Preheat oven to 400°F.&#10;Whisk together honey, soy sauce, and minced garlic.&#10;Bake salmon for 12-15 minutes until flaky."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-recipe-notes">Notes & Tips (optional)</label>
+                    <textarea id="edit-recipe-notes" rows="2" placeholder="Great served over jasmine rice with steamed broccoli."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-recipe-source">Source URL (optional)</label>
+                    <input type="text" id="edit-recipe-source" placeholder="https://...">
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn btn-outline" onclick="RecipesView.closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn" id="edit-recipe-save-btn">Save Recipe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pantry AI Detection Verification Modal -->
+    <div id="pantry-verify-modal" class="modal-overlay" onclick="if(event.target===this) PantryView.closeVerifyModal()">
+        <div class="modal-card" style="max-width: 640px;">
+            <div class="modal-drag-pill"></div>
+            
+            <div class="pantry-verify-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <h3 style="margin: 0; font-size: 1.15rem;">✨ Verify AI-Detected Items</h3>
+                    <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.9rem;" onclick="PantryView.closeVerifyModal()">✕</button>
+                </div>
+                <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0 0 0.65rem 0;">Review detected items below. Check what you want to keep, tweak names/quantities, or add anything missed.</p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.4rem;">
+                    <span id="pantry-verify-count-badge" class="category-badge" style="background: rgba(0, 240, 255, 0.15); color: var(--accent-cyan); font-weight: 700;">0 selected</span>
+                    <div style="display: flex; gap: 0.35rem;">
+                        <button type="button" class="btn btn-outline btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="PantryView.selectStagingAll(true)">Select All</button>
+                        <button type="button" class="btn btn-outline btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="PantryView.selectStagingAll(false)">Deselect All</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pantry-verify-list" class="pantry-verify-list"></div>
+
+            <div class="pantry-verify-footer">
+                <button type="button" class="btn btn-outline btn-sm" onclick="PantryView.addStagingItem()">
+                    ➕ Add Missed Item
+                </button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="PantryView.closeVerifyModal()">Cancel</button>
+                    <button type="button" class="btn btn-sm" id="pantry-verify-save-btn" style="background: var(--success); font-weight: 700;" onclick="PantryView.saveVerifiedItems()">
+                        ✓ Save to Pantry
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -102,8 +327,10 @@
     <script src="/js/api.js"></script>
     <script src="/js/views/context.js"></script>
     <script src="/js/views/plan.js"></script>
+    <script src="/js/views/pantry.js"></script>
     <script src="/js/views/grocery.js"></script>
     <script src="/js/views/recipes.js"></script>
+    <script src="/js/views/matrix.js"></script>
     <script src="/js/app.js"></script>
 </body>
 </html>

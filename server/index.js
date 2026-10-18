@@ -44,8 +44,14 @@ try {
 const app = express();
 
 app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+  etag: true,
+  lastModified: true,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
 
 console.log('[INIT 5/6] Mounting API routes...');
 try {
@@ -57,7 +63,11 @@ try {
   app.use('/api/plan', require('./routes/plan'));
   console.log('[INIT 5d/6] Mounting /api/grocery...');
   app.use('/api/grocery', require('./routes/grocery'));
-  console.log('[INIT 5e/6] All API routes successfully mounted.');
+  console.log('[INIT 5e/6] Mounting /api/pantry...');
+  app.use('/api/pantry', require('./routes/pantry'));
+  console.log('[INIT 5f/6] Mounting /api/system...');
+  app.use('/api/system', require('./routes/system'));
+  console.log('[INIT 5g/6] All API routes successfully mounted.');
 } catch (err) {
   console.error('[FATAL] Error mounting API routes:', err);
 }

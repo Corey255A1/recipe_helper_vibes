@@ -6,6 +6,8 @@ services:
       - "3000:3000"
     volumes:
       - ./data:/data
+      - ./:/app
+      - /app/node_modules
     restart: unless-stopped
     environment:
       - PORT=3000

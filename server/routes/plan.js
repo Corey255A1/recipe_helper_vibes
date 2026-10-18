@@ -12,20 +12,23 @@ async function getPlans() {
     let plans = JSON.parse(data);
     if (!Array.isArray(plans)) plans = [plans];
 
-    // Auto-rollover if 7 days have passed from the END of the week
+    // Auto-rollover if duration has passed from the START date of the plan
     let changed = false;
     const now = new Date();
     now.setHours(0,0,0,0);
     
     for (let i = 0; i < plans.length; i++) {
       const p = plans[i];
-      const weekOfDate = new Date(p.weekOf);
+      const startDateStr = p.startDate || p.weekOf;
+      const weekOfDate = new Date(startDateStr + 'T00:00:00');
       const diffDays = Math.floor((now - weekOfDate) / (1000 * 60 * 60 * 24));
+      const planDuration = p.daysCount || 7;
       
-      if (diffDays >= 7) {
+      if (diffDays >= planDuration) {
         if (p.meals.length > 0) {
           await historyService.addWeek({
-            weekOf: p.weekOf,
+            weekOf: startDateStr,
+            daysCount: planDuration,
             meals: p.meals
           });
         }
@@ -36,12 +39,11 @@ async function getPlans() {
     }
 
     if (plans.length === 0) {
-      const d = new Date();
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      const monday = new Date(d.setDate(diff));
+      const todayStr = new Date().toISOString().split('T')[0];
       plans.push({
-        weekOf: monday.toISOString().split('T')[0],
+        weekOf: todayStr,
+        startDate: todayStr,
+        daysCount: 7,
         status: 'in_progress',
         meals: [],
         pendingSuggestions: [],
@@ -55,7 +57,7 @@ async function getPlans() {
     }
     
     // Sort plans chronologically
-    plans.sort((a, b) => new Date(a.weekOf) - new Date(b.weekOf));
+    plans.sort((a, b) => new Date(a.startDate || a.weekOf) - new Date(b.startDate || b.weekOf));
 
     // Enrich meals with actual recipe titles from cache
     try {
@@ -96,7 +98,7 @@ async function getPlans() {
 }
 
 async function savePlans(plans) {
-  plans.sort((a, b) => new Date(a.weekOf) - new Date(b.weekOf));
+  plans.sort((a, b) => new Date(a.startDate || a.weekOf) - new Date(b.startDate || b.weekOf));
   await fs.mkdir(config.dataPaths.dataDir, { recursive: true });
   await fs.writeFile(config.dataPaths.plans, JSON.stringify(plans, null, 2));
 }
@@ -105,14 +107,14 @@ async function savePlans(plans) {
 async function getTargetWeek(weekOf) {
   const plans = await getPlans();
   if (weekOf) {
-    return plans.find(p => p.weekOf === weekOf) || plans[0];
+    return plans.find(p => p.weekOf === weekOf || p.startDate === weekOf) || plans[0];
   }
   return plans[0];
 }
 
 async function getPlansAndTargetWeek(weekOf) {
   const plans = await getPlans();
-  const targetWeek = weekOf ? plans.find(p => p.weekOf === weekOf) : plans[0];
+  const targetWeek = weekOf ? plans.find(p => p.weekOf === weekOf || p.startDate === weekOf) : plans[0];
   return { plans, targetWeek };
 }
 
@@ -127,23 +129,60 @@ router.get('/plans', async (req, res, next) => {
 router.post('/plans', async (req, res, next) => {
   try {
     const plans = await getPlans();
-    // Get the last week in the plans array
-    const lastPlan = plans[plans.length - 1];
-    const lastDate = new Date(lastPlan.weekOf);
-    // Add 7 days
-    const nextWeekDate = new Date(lastDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
-    const newWeek = {
-      weekOf: nextWeekDate.toISOString().split('T')[0],
+    let startDate = req.body && req.body.startDate;
+    let daysCount = req.body && req.body.daysCount ? parseInt(req.body.daysCount, 10) : 7;
+    if (isNaN(daysCount) || daysCount < 1) daysCount = 7;
+
+    if (!startDate) {
+      if (plans.length > 0) {
+        const lastPlan = plans[plans.length - 1];
+        const lastStartDate = new Date((lastPlan.startDate || lastPlan.weekOf) + 'T00:00:00');
+        const lastDuration = lastPlan.daysCount || 7;
+        const nextDate = new Date(lastStartDate.getTime() + lastDuration * 24 * 60 * 60 * 1000);
+        startDate = nextDate.toISOString().split('T')[0];
+      } else {
+        startDate = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    const newPlan = {
+      weekOf: startDate,
+      startDate: startDate,
+      daysCount: daysCount,
       status: 'in_progress',
       meals: [],
       pendingSuggestions: [],
       groceryListGenerated: false
     };
     
-    plans.push(newWeek);
+    plans.push(newPlan);
     await savePlans(plans);
     res.json(plans);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/plans/:weekOf', async (req, res, next) => {
+  try {
+    const plans = await getPlans();
+    const plan = plans.find(p => p.weekOf === req.params.weekOf || p.startDate === req.params.weekOf);
+    if (!plan) return res.status(404).json({ error: "Plan not found." });
+
+    const { startDate, daysCount } = req.body;
+    if (startDate) {
+      plan.startDate = startDate;
+      plan.weekOf = startDate;
+    }
+    if (daysCount) {
+      const parsedDays = parseInt(daysCount, 10);
+      if (!isNaN(parsedDays) && parsedDays >= 1) {
+        plan.daysCount = parsedDays;
+      }
+    }
+
+    await savePlans(plans);
+    res.json(plan);
   } catch (error) {
     next(error);
   }
@@ -153,11 +192,11 @@ router.delete('/plans/:weekOf', async (req, res, next) => {
   try {
     let plans = await getPlans();
     if (plans.length <= 1) {
-      return res.status(400).json({ error: "Cannot delete the only active week plan." });
+      return res.status(400).json({ error: "Cannot delete the only active plan." });
     }
-    const index = plans.findIndex(p => p.weekOf === req.params.weekOf);
+    const index = plans.findIndex(p => p.weekOf === req.params.weekOf || p.startDate === req.params.weekOf);
     if (index === -1) {
-      return res.status(404).json({ error: "Week plan not found." });
+      return res.status(404).json({ error: "Plan not found." });
     }
     plans.splice(index, 1);
     await savePlans(plans);
@@ -183,24 +222,29 @@ router.post('/suggest', async (req, res, next) => {
       const contextData = await fs.readFile(config.dataPaths.context, 'utf-8');
       context = JSON.parse(contextData);
     } catch(e) {
-      return res.status(400).json({ error: "Context not set. Please set context first." });
+      context = {
+        rule: "Healthy, delicious home-cooked meals for the family",
+        servings: 4,
+        mealsPerWeek: 7,
+        leftoversEnabled: true
+      };
     }
 
     const { plans, targetWeek } = await getPlansAndTargetWeek(req.query.weekOf);
     if (!targetWeek) return res.status(404).json({ error: "Week not found." });
 
-    const neededMeals = context.mealsPerWeek - targetWeek.meals.length;
-    if (neededMeals <= 0) {
-      return res.status(400).json({ error: "Week is already fully planned." });
-    }
+    const targetDays = targetWeek.daysCount || 7;
+    const targetMeals = context.mealsPerWeek ? Math.max(1, Math.round((context.mealsPerWeek / 7) * targetDays)) : targetDays;
+    const neededMeals = Math.max(1, targetMeals - targetWeek.meals.length);
 
     const history = await historyService.getHistory();
     const cacheSummaries = await recipeCache.list();
     
-    // Add category/mealType context to suggestion if provided
+    // Add category/mealType and customPrompt context to suggestion if provided
     const mealType = req.body.mealType || '';
+    const customPrompt = req.body.customPrompt || '';
 
-    const suggestions = await gemini.generateSuggestions(context, history, cacheSummaries, neededMeals, mealType);
+    const suggestions = await gemini.generateSuggestions(context, history, cacheSummaries, neededMeals, mealType, customPrompt);
     
     targetWeek.pendingSuggestions = suggestions;
     await savePlans(plans);
@@ -231,16 +275,23 @@ router.post('/decide', async (req, res, next) => {
       }
 
       const existingMeal = targetWeek.meals.find(m => m.recipeId === (suggestion ? suggestion.id : d.recipeId));
+      const mult = d.multiplier !== undefined && d.multiplier !== null ? Number(d.multiplier) : 1;
+      const baseServings = (suggestion && suggestion.servings) ? Number(suggestion.servings) : 4;
+      const srv = d.servings !== undefined && d.servings !== null ? Number(d.servings) : Math.round(baseServings * mult);
+
       if (existingMeal) {
         existingMeal.assignedDays = d.assignedDays || [];
         if (d.mealType) existingMeal.mealType = d.mealType;
+        if (d.multiplier !== undefined) existingMeal.multiplier = mult;
+        if (d.servings !== undefined || d.multiplier !== undefined) existingMeal.servings = srv;
         if (suggestion && suggestion.title) existingMeal.title = suggestion.title;
       } else if (d.decision === 'yes' && suggestion) {
         targetWeek.meals.push({
           recipeId: suggestion.id,
           title: suggestion.title,
           assignedDays: d.assignedDays || [],
-          servings: suggestion.servings,
+          servings: srv,
+          multiplier: mult,
           mealType: d.mealType || 'Dinner'
         });
       }
@@ -258,7 +309,7 @@ router.post('/decide', async (req, res, next) => {
 
 router.put('/meals/:recipeId/days', async (req, res, next) => {
   try {
-    const { assignedDays, mealType, weekOf } = req.body;
+    const { assignedDays, mealType, multiplier, servings, weekOf } = req.body;
     const { plans, targetWeek } = await getPlansAndTargetWeek(weekOf);
     if (!targetWeek) return res.status(404).json({ error: "Week not found." });
 
@@ -269,6 +320,15 @@ router.put('/meals/:recipeId/days', async (req, res, next) => {
     
     if (assignedDays) meal.assignedDays = assignedDays;
     if (mealType) meal.mealType = mealType;
+    if (multiplier !== undefined) meal.multiplier = Number(multiplier) || 1;
+    if (servings !== undefined) {
+      meal.servings = Number(servings);
+    } else if (multiplier !== undefined) {
+      // Recompute servings based on base recipe if available
+      const recipe = await recipeCache.get(meal.recipeId);
+      const base = recipe && recipe.servings ? recipe.servings : 4;
+      meal.servings = Math.round(base * (Number(multiplier) || 1));
+    }
     
     await savePlans(plans);
     res.json(targetWeek);
@@ -288,7 +348,14 @@ router.delete('/meals/:recipeId', async (req, res, next) => {
     if (mealIndex !== -1) {
       const meal = targetWeek.meals[mealIndex];
       if (dayToRemove && meal.assignedDays && meal.assignedDays.length > 1) {
-        meal.assignedDays = meal.assignedDays.filter(d => d !== dayToRemove);
+        let dayName = '';
+        try {
+          dayName = new Date(dayToRemove + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+        } catch (e) {}
+        meal.assignedDays = meal.assignedDays.filter(d => d !== dayToRemove && d !== dayName);
+        if (meal.assignedDays.length === 0) {
+          targetWeek.meals.splice(mealIndex, 1);
+        }
       } else {
         targetWeek.meals.splice(mealIndex, 1);
       }

@@ -13,6 +13,8 @@ module.exports = {
     history: path.join(dataDir, 'history.json'),
     completeHistory: path.join(dataDir, 'complete_history.json'),
     plans: path.join(dataDir, 'plans.json'),
+    grocery: path.join(dataDir, 'grocery.json'),
+    pantry: path.join(dataDir, 'pantry.json'),
     recipesDir: path.join(dataDir, 'recipes')
   }
 };
