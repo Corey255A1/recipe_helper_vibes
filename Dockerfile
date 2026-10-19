@@ -1,8 +1,11 @@
 # Use official Node.js 22 alpine image for a lightweight runtime
 FROM node:22-alpine
 
-# Install git for in-app zero-rebuild updates
-RUN apk add --no-cache git
+# Install git and SSH support so in-app git pull/fetch works with SSH remotes
+RUN apk add --no-cache git openssh-client ca-certificates
+
+# Trust GitHub's host key for SSH-based git remotes used by the in-app updater
+RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts && chmod 700 /root/.ssh && chmod 600 /root/.ssh/known_hosts
 
 # Set working directory inside container
 WORKDIR /app
