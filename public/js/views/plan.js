@@ -26,65 +26,66 @@ const PlanView = {
     const isGrid = this.state.viewMode === 'grid';
     return `
       <div class="view" id="plan-view">
-        <div id="plan-header-title" style="margin-bottom: 1.25rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <h2 style="margin: 0; font-size: 1.65rem;">📅 Meal Plan</h2>
-            </div>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <button class="btn btn-outline btn-sm" onclick="PlanView.openDatesModal('create')">+ New Plan</button>
-            </div>
+        <div id="plan-header-title" class="page-header">
+          <div class="page-title-group">
+            <h2>${Icons.render('calendar', 20)} Meal Plan</h2>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('discover-section')?.scrollIntoView({behavior:'smooth'})">${Icons.render('sparkles', 14)} Discover / AI Fill</button>
+            <button class="btn btn-outline btn-sm" onclick="PlanView.openDatesModal('create')">+ New Plan</button>
           </div>
         </div>
         
-        <div id="plan-content" style="margin-bottom: 2.5rem;">
+        <div id="plan-content" style="margin-bottom: 1.35rem;">
           ${Loader.render('Loading plans...')}
         </div>
 
-        <div id="discover-section" style="border-top: 1px solid var(--border); padding-top: 2rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
-            <h2 style="margin: 0; font-size: 1.45rem;">✨ Discover Meals</h2>
+        <div id="discover-section" style="border-top: 1px solid var(--border); padding-top: 1.25rem;">
+          <div class="page-header">
+            <div class="page-title-group">
+              <h2>${Icons.render('sparkles', 18)} Discover Meals</h2>
+            </div>
             
-            <div style="display: flex; gap: 0.25rem; background: var(--surface); padding: 0.25rem; border-radius: 0.5rem; border: 1px solid var(--border);">
-              <button id="view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('grid')" title="Grid View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">🔲 Grid</button>
-              <button id="view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('list')" title="List View" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 0.35rem;">☰ List</button>
+            <div class="segmented-group">
+              <button id="view-mode-grid" class="btn ${isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('grid')" title="Grid View">${Icons.render('layoutGrid', 15)} Grid</button>
+              <button id="view-mode-list" class="btn ${!isGrid ? '' : 'btn-outline'}" onclick="PlanView.setViewMode('list')" title="List View">${Icons.render('list', 15)} List</button>
             </div>
           </div>
 
           <div class="sub-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.85rem; flex-wrap: wrap;">
-            <button id="tab-btn-suggestions" class="btn btn-sm" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('suggestions')">✨ AI Generator</button>
-            <button id="tab-btn-history" class="btn btn-outline btn-sm" style="padding: 0.5rem 1.1rem; font-size: 0.85rem; border-radius: 0.5rem;" onclick="PlanView.switchSubTab('history')">📜 Past Weeks</button>
+            <button id="tab-btn-suggestions" class="btn btn-sm" onclick="PlanView.switchSubTab('suggestions')">${Icons.render('sparkles', 15)} AI Generator</button>
+            <button id="tab-btn-history" class="btn btn-outline btn-sm" onclick="PlanView.switchSubTab('history')">${Icons.render('history', 15)} Past Weeks</button>
           </div>
           
           <div id="discover-suggestions-pane" class="tab-pane active">
             <!-- AI Meal Generator Toolbar with Custom Prompt / Fridge Cleanout -->
             <div class="ai-generator-panel">
               <div style="margin-bottom: 0.85rem;">
-                <h4 style="margin-bottom: 0.25rem; font-size: 1rem; color: #f8fafc;">✨ AI Meal Generator</h4>
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Generate recipes tailored to your preferences, fridge ingredients, or dietary goals.</p>
+                <h4 class="section-heading" style="margin-bottom: 0.25rem;">${Icons.render('sparkles', 16)} AI Meal Generator</h4>
+                <p class="text-muted-sm" style="margin: 0;">Generate recipes tailored to your preferences, fridge ingredients, or dietary goals.</p>
               </div>
               
               <!-- Custom Prompt / Fridge Cleanout Input -->
-              <div style="margin-bottom: 0.85rem;">
-                <input type="text" id="ai-custom-prompt" placeholder="💡 Optional: e.g. 'Use up leftover chicken and spinach', 'Under 25 mins', 'Mexican night'..." style="width: 100%; margin-bottom: 0; padding: 0.65rem 0.85rem; font-size: 0.875rem;" value="${this.state.customPrompt}">
+              <div class="form-group-compact">
+                <input type="text" id="ai-custom-prompt" placeholder="Optional: e.g. 'Use up leftover chicken and spinach', 'Under 25 mins', 'Mexican night'..." style="width: 100%; margin-bottom: 0;" value="${this.state.customPrompt}">
               </div>
 
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                <div id="suggest-category-bar" style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
-                   <button class="btn btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('')">All</button>
-                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Breakfast')">🥞 Breakfast</button>
-                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Lunch')">🥗 Lunch</button>
-                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Dinner')">🍽️ Dinner</button>
-                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Snack')">🥨 Snack</button>
-                   <button class="btn btn-outline btn-sm" style="border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="PlanView.setSuggestCategory('Dessert')">🍰 Dessert</button>
+                <div id="suggest-category-bar" class="chip-row" style="align-items: center;">
+                   <button class="btn btn-sm" style="border-radius: 1rem;" onclick="PlanView.setSuggestCategory('')">All</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 1rem;" onclick="PlanView.setSuggestCategory('Breakfast')">Breakfast</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 1rem;" onclick="PlanView.setSuggestCategory('Lunch')">Lunch</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 1rem;" onclick="PlanView.setSuggestCategory('Dinner')">Dinner</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 1rem;" onclick="PlanView.setSuggestCategory('Snack')">Snack</button>
+                   <button class="btn btn-outline btn-sm" style="border-radius: 1rem;" onclick="PlanView.setSuggestCategory('Dessert')">Dessert</button>
                 </div>
                 
-                <button class="btn" style="padding: 0.55rem 1.25rem; font-size: 0.875rem; border-radius: 0.6rem; white-space: nowrap;" onclick="PlanView.suggest()">✨ Generate Suggestions</button>
+                <button class="btn btn-sm" onclick="PlanView.suggest()">${Icons.render('sparkles', 15)} Generate Suggestions</button>
               </div>
             </div>
 
             <div id="discover-content">
-              <p style="color: var(--text-secondary);">Click "Generate Suggestions" to get AI recommendations tailored to your week.</p>
+              <p class="text-muted-sm">Click "Generate Suggestions" to get AI recommendations tailored to your week.</p>
             </div>
           </div>
 
@@ -149,12 +150,12 @@ const PlanView = {
 
     if (mode === 'edit' && weekOf) {
       const plan = (this.state.plans || []).find(p => p.weekOf === weekOf || p.startDate === weekOf);
-      if (titleEl) titleEl.innerText = '📅 Edit Plan Schedule';
+      if (titleEl) titleEl.innerText = 'Edit Plan Schedule';
       if (submitBtn) submitBtn.innerText = 'Save Changes';
       if (startInput) startInput.value = plan ? (plan.startDate || plan.weekOf) : new Date().toISOString().split('T')[0];
       if (countInput) countInput.value = plan ? (plan.daysCount || 7) : 7;
     } else {
-      if (titleEl) titleEl.innerText = '📅 Create New Plan';
+      if (titleEl) titleEl.innerText = 'Create New Plan';
       if (submitBtn) submitBtn.innerText = '+ Create Plan';
       
       let nextStart = new Date();
@@ -345,7 +346,7 @@ const PlanView = {
       return;
     }
 
-    let html = '<div class="plan-weeks-container" style="display: flex; flex-direction: column; gap: 1rem;">';
+    let html = '<div class="plan-weeks-container">';
     
     this.state.plans.forEach(plan => {
       const planKey = plan.weekOf || plan.startDate;
@@ -375,41 +376,33 @@ const PlanView = {
       const rangeLabel = Utils.formatPlanRange(plan);
       
       html += `
-        <div class="week-card ${isExpanded ? 'expanded' : 'collapsed'}" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; transition: all 0.3s ease;">
-          <div class="week-header" onclick="PlanView.toggleWeek('${planKey}')" style="padding: 0.9rem 1.15rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: ${isExpanded ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)'}; gap: 0.75rem; flex-wrap: wrap;">
-             
-             <!-- Left Column: Date Range Label -->
-             <div class="week-header-title" style="display: flex; align-items: center; gap: 0.5rem; min-width: 0;">
-               <h3 style="margin: 0; font-size: 1.05rem;">📅 ${rangeLabel}</h3>
+        <div class="plan-week-card ${isExpanded ? 'expanded' : 'collapsed'}">
+          <div class="week-header" onclick="PlanView.toggleWeek('${planKey}')" ${isExpanded ? '' : 'style="border-bottom: none;"'}>
+             <div class="week-header-title">
+               ${Icons.render('calendar', 16)}
+               <span>${rangeLabel}</span>
              </div>
              
-             <!-- Right Column: Days Planned Badge + Dots + Edit + Delete -->
-             <div class="week-header-actions" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;" onclick="event.stopPropagation()">
-               <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
-                 <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 0.15rem 0.5rem; border-radius: 1rem; white-space: nowrap;">
-                   ${plannedDaysCount}/${planDays.length} Days Planned
-                 </span>
-                 <div class="week-summary-dots" style="display: flex; gap: 0.25rem; opacity: 0.85;">
-                   ${planDays.map(d => `<span title="${d.fullLabel}" style="width: 7px; height: 7px; border-radius: 50%; background: ${dailyMeals[d.dateStr].length > 0 ? 'var(--primary)' : 'rgba(255,255,255,0.15)'};"></span>`).join('')}
-                 </div>
-               </div>
+             <div class="week-header-actions" onclick="event.stopPropagation()">
+               <span class="pill-badge">${plannedDaysCount} / ${planDays.length} days planned</span>
 
-               <button onclick="PlanView.openDatesModal('edit', '${planKey}')" title="Edit start date and duration" class="btn btn-outline btn-sm" style="padding: 0.25rem 0.55rem; font-size: 0.775rem; white-space: nowrap;">
-                 📅 Edit
+               <button onclick="PlanView.openDatesModal('edit', '${planKey}')" title="Edit start date and duration" class="btn btn-outline btn-xs">
+                 ${Icons.render('edit', 13)} Edit
                </button>
 
                ${this.state.plans.length > 1 ? `
-                 <button onclick="PlanView.removeWeek(event, '${planKey}')" title="Delete this plan" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; border-radius: 0.5rem; padding: 0.25rem 0.55rem; font-size: 0.775rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'">🗑️</button>
+                 <button onclick="PlanView.removeWeek(event, '${planKey}')" title="Delete this plan" class="icon-btn danger" aria-label="Delete plan">
+                   ${Icons.render('trash', 14)}
+                 </button>
                ` : ''}
-               <div style="font-size: 0.85rem; color: var(--text-muted); padding: 0.25rem 0.4rem; transition: transform 0.2s; transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0)'}; cursor: pointer;" onclick="PlanView.toggleWeek('${planKey}')">
-                  ▼
-               </div>
+               <button type="button" class="icon-btn" onclick="PlanView.toggleWeek('${planKey}')" title="${isExpanded ? 'Collapse week' : 'Expand week'}" aria-label="${isExpanded ? 'Collapse week' : 'Expand week'}">
+                 ${isExpanded ? Icons.render('chevronUp', 16) : Icons.render('chevronDown', 16)}
+               </button>
              </div>
           </div>
       `;
 
       if (isExpanded) {
-        html += `<div class="week-body" style="padding: 1.25rem; border-top: 1px solid var(--border);">`;
         html += `<div class="calendar-list-view">`;
         
         planDays.forEach((dayObj) => {
@@ -426,47 +419,48 @@ const PlanView = {
               <div class="day-list-meals">
                 ${meals.length > 0 ? meals.map(m => {
                   const cleanTitle = m.title || m.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                  const typeIcon = m.mealType === 'Breakfast' ? '🥞' : m.mealType === 'Lunch' ? '🥗' : m.mealType === 'Snack' ? '🥨' : m.mealType === 'Dessert' ? '🍰' : '🍽️';
-                  
+                  const mealTypeLabel = m.mealType || 'Dinner';
                   const multStr = m.multiplier && m.multiplier !== 1 ? ` (${m.multiplier === 0.5 ? '½x' : m.multiplier + 'x'})` : '';
                   return `
                     <div class="day-meal-row-card">
                       <div class="meal-row-main">
-                        <span style="font-size: 1.05rem;" title="${m.mealType || 'Dinner'}">${typeIcon}</span>
+                        <span class="meal-type-pill">${mealTypeLabel}</span>
                         <a href="javascript:void(0)" onclick="PlanView.viewRecipe('${m.recipeId}', ${m.multiplier || 1})" class="meal-row-title" title="Click to open cook mode (${m.servings} servings)">
                           ${cleanTitle}
                         </a>
                       </div>
                       <div class="meal-row-meta">
-                        <span class="meal-row-servings">🍽️ ${m.servings} servings${multStr}</span>
+                        <span class="meal-row-servings">${m.servings} servings${multStr}</span>
                         <div class="meal-row-actions">
-                          <button onclick="PlanView.editMealDays('${m.recipeId}', '${planKey}')" title="Reassign meal days & multiplier" class="action-btn action-btn-edit">✏️ Edit</button>
-                          <button onclick="PlanView.removeMeal('${m.recipeId}', '${planKey}', '${dayObj.dateStr}')" title="Remove ${cleanTitle} from ${dayObj.dayShort}" class="btn-remove-meal">🗑️</button>
+                          <button onclick="PlanView.editMealDays('${m.recipeId}', '${planKey}')" title="Reassign meal days & multiplier" class="icon-btn" aria-label="Edit ${cleanTitle}">
+                            ${Icons.render('edit', 14)}
+                          </button>
+                          <button onclick="PlanView.removeMeal('${m.recipeId}', '${planKey}', '${dayObj.dateStr}')" title="Remove ${cleanTitle} from ${dayObj.dayShort}" class="icon-btn danger" aria-label="Remove ${cleanTitle}">
+                            ${Icons.render('trash', 14)}
+                          </button>
                         </div>
                       </div>
                     </div>
                   `;
                 }).join('') : `
                   <div class="empty-list-target" onclick="PlanView.quickAddForDay('${dayObj.dateStr}', '${planKey}')">
-                    <span class="empty-list-icon">➕</span>
-                    <span class="empty-list-text">No meals planned for ${dayObj.fullLabel} — tap to add</span>
+                    ${Icons.render('plus', 14)}
+                    <span>No meals planned for ${dayObj.fullLabel} — tap to add</span>
                   </div>
                 `}
               </div>
 
-              <div class="day-list-action">
-                <button class="btn-add-meal-row" onclick="PlanView.quickAddForDay('${dayObj.dateStr}', '${planKey}')" title="Add meal to ${dayObj.dayShort}">
-                  + Add
-                </button>
-              </div>
+              <button class="btn btn-outline btn-xs day-add-btn" onclick="PlanView.quickAddForDay('${dayObj.dateStr}', '${planKey}')" title="Add meal to ${dayObj.dayShort}">
+                + Add
+              </button>
             </div>
           `;
         });
         
-        html += `</div></div>`; // end week-body
+        html += `</div>`;
       }
       
-      html += `</div>`; // end week-card
+      html += `</div>`; // end plan-week-card
     });
     
     html += `</div>`;
@@ -506,24 +500,27 @@ const PlanView = {
     if (!content) return;
     if (!weeks || weeks.length === 0) {
       content.innerHTML = `
-        <div style="background: var(--surface); padding: 2rem; border-radius: 1.25rem; border: 1px solid var(--border); text-align: center;">
-          <p style="color: var(--text-muted); margin-bottom: 0;">No meal history found yet.</p>
+        <div class="surface-card" style="padding: 2rem; text-align: center;">
+          <p class="text-muted-sm" style="margin-bottom: 0;">No meal history found yet.</p>
         </div>
       `;
       return;
     }
 
-    let html = `<p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Showing the last ${weeks.length} week(s) of history.</p>`;
+    let html = `<p class="text-muted-sm" style="margin-bottom: 1.25rem;">Showing the last ${weeks.length} week(s) of history.</p>`;
     const sortedWeeks = [...weeks].reverse();
 
     sortedWeeks.forEach(week => {
       html += `
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.5rem; margin-bottom: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
-            <h3 style="font-size: 1.2rem; font-weight: 600;">📅 Week of ${week.weekOf}</h3>
+        <div class="plan-week-card">
+          <div class="week-header" style="cursor: default;">
+            <div class="week-header-title">
+              ${Icons.render('calendar', 16)}
+              <span>Week of ${week.weekOf}</span>
+            </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.85rem; padding: 1.15rem;">
             ${(week.meals || []).map(meal => {
               const assignedDaysStr = (meal.assignedDays && meal.assignedDays.length > 0) 
                 ? meal.assignedDays.join(', ') 
@@ -531,14 +528,14 @@ const PlanView = {
               const cleanTitle = meal.title || meal.recipeId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
               return `
-                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 1rem; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                <div style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); padding: 0.95rem; border-radius: 0.7rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
                   <div>
-                    <h4 style="font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text);">${cleanTitle}</h4>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">📅 Assigned: <strong>${assignedDaysStr}</strong></p>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">🍽️ Servings: ${meal.servings}</p>
+                    <h4 style="font-size: 0.98rem; margin-bottom: 0.35rem; color: var(--text);">${cleanTitle}</h4>
+                    <p class="text-muted-sm" style="margin-bottom: 0.2rem;">Assigned: <strong>${assignedDaysStr}</strong></p>
+                    <p class="text-muted-sm" style="margin-bottom: 0;">Servings: ${meal.servings}</p>
                   </div>
-                  <button class="btn btn-outline btn-sm" style="font-size: 0.8rem; padding: 0.4rem 0.6rem; width: 100%; text-align: center;" onclick="PlanView.decide('${meal.recipeId}', 'yes')">
-                    ➕ Add to Plan Again
+                  <button class="btn btn-outline btn-sm" style="width: 100%;" onclick="PlanView.decide('${meal.recipeId}', 'yes')">
+                    ${Icons.render('plus', 14)} Add to Plan Again
                   </button>
                 </div>
               `;
@@ -577,13 +574,12 @@ const PlanView = {
       }
     } catch (e) {
       content.innerHTML = `
-        <div style="background: var(--surface); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border); text-align: center; margin-top: 1rem;">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+        <div class="surface-card" style="padding: 2rem; text-align: center; margin-top: 1rem;">
           <h4 style="color: var(--danger); margin-bottom: 0.5rem;">Could not generate recommendations</h4>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">${e.message || 'Check your Gemini API Key in Settings'}</p>
-          <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-            <button class="btn btn-sm" onclick="PlanView.suggest()">🔄 Try Again</button>
-            <button class="btn btn-outline btn-sm" onclick="App.navigate('context')">⚙️ Check Settings</button>
+          <p class="text-muted-sm" style="margin-bottom: 1.25rem;">${e.message || 'Check your Gemini API Key in Settings'}</p>
+          <div class="inline-actions" style="justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-sm" onclick="PlanView.suggest()">${Icons.render('refresh', 14)} Try Again</button>
+            <button class="btn btn-outline btn-sm" onclick="App.navigate('context')">${Icons.render('settings', 14)} Check Settings</button>
           </div>
         </div>
       `;
@@ -594,7 +590,7 @@ const PlanView = {
     const content = document.getElementById('discover-content');
     if (!content) return;
     if (!this.state.suggestions || !this.state.suggestions.length) {
-      content.innerHTML = `<p style="color: var(--text-secondary);">No suggestions available. Click "Generate Suggestions" to get started.</p>`;
+      content.innerHTML = `<p class="text-muted-sm">No suggestions available. Click "Generate Suggestions" to get started.</p>`;
       return;
     }
 
@@ -603,9 +599,10 @@ const PlanView = {
     
     this.state.suggestions.forEach(recipe => {
       const actions = `
-        <div class="actions" style="display: flex; gap: 0.5rem; width: 100%; align-items: center; margin-top: 0;">
-          <button class="btn" style="background: var(--success); flex: 1; padding: 0.65rem 1rem; font-size: 0.9rem;" onclick="PlanView.decide('${recipe.id}', 'yes')">➕ Add to Plan</button>
-          <button class="btn btn-outline" style="padding: 0.65rem 0.95rem; font-size: 0.875rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.35rem;" onclick="PlanView.decide('${recipe.id}', 'not_this_time')" title="Save recipe to library">💾 Save</button>
+        <div class="actions">
+          <button class="btn btn-sm btn-primary-action" onclick="PlanView.decide('${recipe.id}', 'yes')">${Icons.render('plus', 14)} Add to Plan</button>
+          <button class="btn btn-secondary btn-sm" onclick="PlanView.decide('${recipe.id}', 'not_this_time')" title="Save recipe to library">${Icons.render('book', 14)} Save</button>
+          <button class="btn btn-secondary btn-sm" onclick="PlanView.viewRecipe('${recipe.id}')" title="Open cook mode">${Icons.render('utensils', 14)} Cook</button>
         </div>
       `;
       grid.innerHTML += RecipeCard.render(recipe, actions, true);
@@ -816,7 +813,7 @@ const PlanView = {
       const isChecked = preselectedDays.includes(d.dateStr) || preselectedDays.includes(d.dayName);
       const existing = dailyMeals[d.dateStr] || [];
       const subtitle = existing.length > 0
-        ? `<small style="font-size: 0.7rem; color: #a5b4fc; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${existing.join(', ')}">🍽️ ${existing.join(', ')}</small>`
+        ? `<small style="font-size: 0.7rem; color: var(--primary); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${existing.join(', ')}">${existing.join(', ')}</small>`
         : `<small style="font-size: 0.7rem; color: var(--text-muted); display: block;">+ Empty</small>`;
 
       return `

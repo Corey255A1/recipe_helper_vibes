@@ -12,6 +12,7 @@ import base64
 import socket
 import subprocess
 import shutil
+import tempfile
 
 PORT = 2828
 APP_URL = os.environ.get("APP_URL", "http://localhost:3000")
@@ -116,8 +117,9 @@ def run():
         os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
     print(f"=== Starting Firefox Headless Marionette ===")
+    tmp_profile = tempfile.mkdtemp(prefix="ff_marionette_")
     ff_proc = subprocess.Popen(
-        ["firefox", "--headless", "--marionette"],
+        ["firefox", "--headless", "--marionette", "--no-remote", "--profile", tmp_profile],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
@@ -138,10 +140,12 @@ def run():
             client.set_window_rect(width, height)
             time.sleep(0.5)
 
-            # View 1: Recipe Library
+            # View 1: Recipe Library (Grid)
             print(f"  -> Capturing Library View ({device})...")
             client.navigate(f"{APP_URL}/")
             time.sleep(1.8)
+            client.execute_script("return window.RecipesView && window.RecipesView.setViewMode('grid');")
+            time.sleep(0.6)
             b64 = client.take_screenshot()
             filename = f"{device}_1_library.png"
             path = os.path.join(OUTPUT_DIR, filename)
@@ -149,6 +153,20 @@ def run():
                 f.write(base64.b64decode(b64))
             copy_to_artifact(path, filename)
             captured.append({"device": device, "view": "Library", "file": filename})
+
+            # View 1b: Recipe Library (List View)
+            print(f"  -> Capturing Library List View ({device})...")
+            client.execute_script("return window.RecipesView && window.RecipesView.setViewMode('list');")
+            time.sleep(0.6)
+            b64 = client.take_screenshot()
+            filename = f"{device}_1b_library_list.png"
+            path = os.path.join(OUTPUT_DIR, filename)
+            with open(path, "wb") as f:
+                f.write(base64.b64decode(b64))
+            copy_to_artifact(path, filename)
+            captured.append({"device": device, "view": "Library List View", "file": filename})
+            client.execute_script("return window.RecipesView && window.RecipesView.setViewMode('grid');")
+            time.sleep(0.3)
 
             # View 2: Cook Mode Modal
             print(f"  -> Capturing Cook Mode Modal ({device})...")
@@ -163,6 +181,18 @@ def run():
             captured.append({"device": device, "view": "Cook Mode", "file": filename})
             client.execute_script("return window.RecipeCard && window.RecipeCard.closeModal();")
             time.sleep(0.4)
+
+            # View 2b: Standalone Recipe Popout
+            print(f"  -> Capturing Standalone Recipe Popout ({device})...")
+            client.navigate(f"{APP_URL}/api/recipes/lemon-herb-roast-chicken/view")
+            time.sleep(1.2)
+            b64 = client.take_screenshot()
+            filename = f"{device}_2b_popout.png"
+            path = os.path.join(OUTPUT_DIR, filename)
+            with open(path, "wb") as f:
+                f.write(base64.b64decode(b64))
+            copy_to_artifact(path, filename)
+            captured.append({"device": device, "view": "Recipe Popout", "file": filename})
 
             # View 3: Meal Plan View
             print(f"  -> Capturing Meal Plan View ({device})...")
@@ -364,6 +394,7 @@ def run():
             ff_proc.wait(timeout=3)
         except Exception:
             ff_proc.kill()
+        shutil.rmtree(tmp_profile, ignore_errors=True)
 
 if __name__ == "__main__":
     run()

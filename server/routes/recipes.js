@@ -272,16 +272,24 @@ router.get('/:id/view', async (req, res, next) => {
     const serializedRecipe = JSON.stringify(recipe).replace(/</g, '\\u003c');
 
     const html = `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#090d16">
+  <meta name="theme-color" content="#121110">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>${recipe.title} - Recipe Helper</title>
+  <script>
+    (function() {
+      var t = localStorage.getItem('recipe_helper_theme');
+      if (t === 'light' || t === 'dark') {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="popout-body">
@@ -292,7 +300,9 @@ router.get('/:id/view', async (req, res, next) => {
   <!-- Floating Cook Timer Bar -->
   <div id="cook-timer-bar" class="cook-timer-bar" style="display: none;">
     <div class="cook-timer-info">
-      <span class="cook-timer-icon">⏱️</span>
+      <span class="cook-timer-icon">
+        <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </span>
       <div>
         <div id="cook-timer-label" class="cook-timer-label">Cooking Timer</div>
         <div id="cook-timer-display" class="cook-timer-display">00:00</div>
@@ -301,7 +311,7 @@ router.get('/:id/view', async (req, res, next) => {
     <div class="cook-timer-actions">
       <button class="btn btn-outline btn-sm" id="cook-timer-pause-btn" onclick="RecipeCard.togglePauseTimer()">Pause</button>
       <button class="btn btn-outline btn-sm" onclick="RecipeCard.addTimerMinute()">+1m</button>
-      <button class="btn btn-sm" style="background: var(--danger);" onclick="RecipeCard.stopTimer()">✕</button>
+      <button class="btn btn-danger btn-sm" onclick="RecipeCard.stopTimer()" aria-label="Stop Timer">✕</button>
     </div>
   </div>
 
@@ -309,6 +319,7 @@ router.get('/:id/view', async (req, res, next) => {
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Shared Scripts -->
+  <script src="/js/components/icons.js"></script>
   <script src="/js/utils.js"></script>
   <script src="/js/components/toast.js"></script>
   <script src="/js/components/recipeCard.js"></script>

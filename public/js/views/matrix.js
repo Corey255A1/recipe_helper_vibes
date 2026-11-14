@@ -5,6 +5,7 @@ const MatrixView = {
     filterText: '',
     selectedDayStr: '',
     selectedMealType: 'Dinner',
+    mobilePane: 'center',    // 'left', 'center', 'right'
     plans: [],
     currentPlan: null,
     recipes: [],
@@ -20,7 +21,7 @@ const MatrixView = {
         <div class="matrix-top-bar">
           <div class="matrix-bar-left">
             <div class="matrix-brand">
-              <span class="matrix-brand-icon">📊</span>
+              <span class="matrix-brand-icon">${Icons.render('grid', 20)}</span>
               <div>
                 <h2 class="matrix-title">Kitchen Matrix</h2>
                 <span class="matrix-subtitle">High-Density Desktop Workspace</span>
@@ -30,16 +31,16 @@ const MatrixView = {
             <!-- Workbook Sheet Tabs -->
             <div class="matrix-sheet-tabs" role="tablist">
               <button type="button" class="matrix-tab ${this.state.activeSheet === 'schedule' ? 'active' : ''}" onclick="MatrixView.switchSheet('schedule')">
-                <span>📅</span> Schedule Matrix
+                ${Icons.render('calendar', 14)} Schedule Matrix
               </button>
               <button type="button" class="matrix-tab ${this.state.activeSheet === 'recipes' ? 'active' : ''}" onclick="MatrixView.switchSheet('recipes')">
-                <span>📖</span> Master Recipes
+                ${Icons.render('book', 14)} Master Recipes
               </button>
               <button type="button" class="matrix-tab ${this.state.activeSheet === 'pantry' ? 'active' : ''}" onclick="MatrixView.switchSheet('pantry')">
-                <span>🥫</span> Master Pantry
+                ${Icons.render('pantry', 14)} Master Pantry
               </button>
               <button type="button" class="matrix-tab ${this.state.activeSheet === 'grocery' ? 'active' : ''}" onclick="MatrixView.switchSheet('grocery')">
-                <span>🛒</span> Master Grocery
+                ${Icons.render('cart', 14)} Master Grocery
               </button>
             </div>
           </div>
@@ -47,8 +48,9 @@ const MatrixView = {
           <div class="matrix-bar-right">
             <!-- Universal Filter Input -->
             <div class="matrix-search-box">
-              <input type="text" id="matrix-filter-input" placeholder="🔍 Filter sheet..." value="${this.state.filterText}" oninput="MatrixView.onFilterInput(this.value)">
-              ${this.state.filterText ? `<button class="matrix-filter-clear" onclick="MatrixView.clearFilter()">✕</button>` : ''}
+              <span style="position: absolute; left: 0.5rem; color: var(--text-muted); display: inline-flex; pointer-events: none;">${Icons.render('search', 13)}</span>
+              <input type="text" id="matrix-filter-input" placeholder="Filter sheet..." value="${this.state.filterText}" oninput="MatrixView.onFilterInput(this.value)" style="padding-left: 1.7rem !important;">
+              ${this.state.filterText ? `<button class="matrix-filter-clear" onclick="MatrixView.clearFilter()">${Icons.render('close', 13)}</button>` : ''}
             </div>
 
             <!-- Target Plan Dropdown (When on Schedule sheet) -->
@@ -59,24 +61,32 @@ const MatrixView = {
 
             <!-- Density Toggle -->
             <button type="button" class="matrix-tool-btn" onclick="MatrixView.toggleDensity()" title="Toggle compact spreadsheet density">
-              ${this.state.density === 'compact' ? '🗜️ Compact' : '📐 Normal'}
+              ${this.state.density === 'compact' ? `${Icons.render('list', 14)} Compact` : `${Icons.render('layoutGrid', 14)} Normal`}
             </button>
 
             <!-- Export Tools -->
             <div class="matrix-export-group">
               <button type="button" class="matrix-tool-btn" onclick="MatrixView.copyActiveSheetTsv()" title="Copy active table as tab-delimited text for Excel / Sheets">
-                📋 Copy TSV
+                ${Icons.render('copy', 14)} Copy TSV
               </button>
-              <button type="button" class="matrix-tool-btn" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399;" onclick="MatrixView.exportActiveSheetCsv()" title="Download as .csv file">
-                📥 Export CSV
+              <button type="button" class="matrix-tool-btn" style="background: var(--success-soft); border-color: var(--success-border); color: var(--success);" onclick="MatrixView.exportActiveSheetCsv()" title="Download as .csv file">
+                ${Icons.render('download', 14)} Export CSV
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Mobile Notice Warning (only visible on small mobile devices) -->
-        <div class="matrix-mobile-notice">
-          <span>💡 <strong>Desktop Power View:</strong> For the best multi-paned spreadsheet experience, use a desktop or tablet in landscape.</span>
+        <!-- Mobile/Tablet Sub-Pane Switcher for Schedule Matrix -->
+        <div id="matrix-mobile-pane-bar" class="matrix-mobile-pane-bar" style="${this.state.activeSheet !== 'schedule' ? 'display: none;' : ''}">
+          <button type="button" class="matrix-mobile-pane-tab ${this.state.mobilePane === 'center' ? 'active' : ''}" onclick="MatrixView.setMobilePane('center')">
+            ${Icons.render('calendar', 14)} Schedule Grid
+          </button>
+          <button type="button" class="matrix-mobile-pane-tab ${this.state.mobilePane === 'left' ? 'active' : ''}" onclick="MatrixView.setMobilePane('left')">
+            ${Icons.render('book', 14)} Catalog
+          </button>
+          <button type="button" class="matrix-mobile-pane-tab ${this.state.mobilePane === 'right' ? 'active' : ''}" onclick="MatrixView.setMobilePane('right')">
+            ${Icons.render('cart', 14)} Grocery Sync
+          </button>
         </div>
 
         <!-- Sheet Body Workspace -->
@@ -121,9 +131,24 @@ const MatrixView = {
     if (!sel) return;
     sel.innerHTML = (this.state.plans || []).map(p => `
       <option value="${p.weekOf}" ${this.state.currentPlan && this.state.currentPlan.weekOf === p.weekOf ? 'selected' : ''}>
-        📅 ${Utils.formatPlanRange ? Utils.formatPlanRange(p) : (p.startDate || p.weekOf)}
+        ${Utils.formatPlanRange ? Utils.formatPlanRange(p) : (p.startDate || p.weekOf)}
       </option>
     `).join('');
+  },
+
+  setMobilePane(pane) {
+    this.state.mobilePane = pane;
+    document.querySelectorAll('.matrix-mobile-pane-tab').forEach(tab => {
+      if (tab.getAttribute('onclick')?.includes(`'${pane}'`)) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+    const splitContainer = document.querySelector('.matrix-split-container');
+    if (splitContainer) {
+      splitContainer.setAttribute('data-mobile-pane', pane);
+    }
   },
 
   switchSheet(sheetName) {
@@ -136,9 +161,9 @@ const MatrixView = {
       }
     });
 
-    const planWrapper = document.getElementById('matrix-plan-select-wrapper');
-    if (planWrapper) {
-      planWrapper.style.display = sheetName === 'schedule' ? 'flex' : 'none';
+    const mobileBar = document.getElementById('matrix-mobile-pane-bar');
+    if (mobileBar) {
+      mobileBar.style.display = sheetName === 'schedule' ? '' : 'none';
     }
 
     this.renderCurrentSheet();
@@ -156,10 +181,12 @@ const MatrixView = {
         content.classList.add('density-comfortable');
       }
     }
-    // Update button text
+    // Update button content
     const btn = document.querySelector('button[onclick="MatrixView.toggleDensity()"]');
     if (btn) {
-      btn.innerText = this.state.density === 'compact' ? '🗜️ Compact' : '📐 Normal';
+      btn.innerHTML = this.state.density === 'compact'
+        ? `${Icons.render('list', 14)} Compact`
+        : `${Icons.render('layoutGrid', 14)} Normal`;
     }
   },
 
@@ -205,8 +232,8 @@ const MatrixView = {
     const plan = this.state.currentPlan;
     if (!plan) {
       container.innerHTML = `
-        <div style="background: var(--surface); padding: 3rem; text-align: center; border-radius: 1rem; border: 1px solid var(--border);">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📅</div>
+        <div class="surface-card" style="padding: 3rem; text-align: center;">
+          <div style="color: var(--text-muted); margin-bottom: 0.75rem;">${Icons.render('calendar', 36)}</div>
           <h3>No Meal Plan Schedule</h3>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">Create a meal plan in the Plan view first to open the Schedule Matrix.</p>
           <button class="btn btn-sm" onclick="App.navigate('plan')">Go to Meal Plan</button>
@@ -236,37 +263,36 @@ const MatrixView = {
     pantryMatches.forEach(m => matchedIngMap.set(m.groceryItem.id, m.pantryItem));
 
     const html = `
-      <div class="matrix-split-container">
+      <div class="matrix-split-container" data-mobile-pane="${this.state.mobilePane || 'center'}">
         <!-- PANE 1 (LEFT): Recipe Catalog Sidebar -->
         <aside class="matrix-pane matrix-pane-left">
           <div class="matrix-pane-header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span class="matrix-pane-title">📖 Recipe Catalog</span>
+              <span class="matrix-pane-title">${Icons.render('book', 15)} Recipe Catalog</span>
               <span class="matrix-badge">${catalogRecipes.length}</span>
             </div>
             <div style="font-size: 0.725rem; color: var(--text-muted); margin-top: 0.2rem;">
-              Target Day: <strong style="color: var(--accent-cyan);">${this.getSelectedDayLabel(days)}</strong>
+              Target Day: <strong style="color: var(--accent);">${this.getSelectedDayLabel(days)}</strong>
             </div>
           </div>
 
           <div class="matrix-pane-body">
-            <table class="matrix-table matrix-table-dense">
+            <table class="matrix-table matrix-table-dense" style="table-layout: fixed; width: 100%;">
               <thead>
                 <tr>
-                  <th style="width: 28px;"></th>
-                  <th>Title</th>
-                  <th style="width: 50px; text-align: right;">Time</th>
-                  <th style="width: 44px; text-align: center;">+ Plan</th>
+                  <th>Recipe Title</th>
+                  <th style="width: 44px; text-align: right;">Time</th>
+                  <th style="width: 46px; text-align: center;">Plan</th>
                 </tr>
               </thead>
               <tbody>
                 ${catalogRecipes.map(r => `
                   <tr class="matrix-recipe-row" ondblclick="MatrixView.quickAssignRecipe('${r.id}')" title="Double click to assign to ${this.getSelectedDayLabel(days)}">
-                    <td style="text-align: center; font-size: 0.85rem;">${r.favorite ? '⭐' : '📄'}</td>
-                    <td class="matrix-cell-truncate" style="max-width: 140px; font-weight: 500;">
-                      <a href="javascript:void(0)" onclick="RecipeCard.openModal('${r.id}')" style="color: inherit; text-decoration: none;">${r.title}</a>
+                    <td class="matrix-cell-truncate" style="font-weight: 500;">
+                      ${r.favorite ? `<span style="color: var(--primary); display: inline-flex; margin-right: 0.25rem; vertical-align: middle;">${Icons.render('heart', 12, '', true)}</span>` : ''}
+                      <a href="javascript:void(0)" onclick="RecipeCard.openModal('${r.id}')" style="color: var(--text); text-decoration: none;" title="${r.title}">${r.title}</a>
                     </td>
-                    <td style="text-align: right; font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">
+                    <td style="text-align: right; font-family: monospace; font-size: 0.74rem; color: var(--text-muted);">
                       ${(r.totalTime || ((r.prepTime || 0) + (r.cookTime || 0)) || 25)}m
                     </td>
                     <td style="text-align: center;">
@@ -283,12 +309,12 @@ const MatrixView = {
         <main class="matrix-pane matrix-pane-center">
           <div class="matrix-pane-header" style="display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="matrix-pane-title">📅 Meal Planning Matrix</span>
-              <span class="matrix-badge" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc;">${days.length} Days</span>
+              <span class="matrix-pane-title">${Icons.render('calendar', 15)} Meal Planning Matrix</span>
+              <span class="matrix-badge">${days.length} Days</span>
             </div>
             <div style="display: flex; gap: 0.4rem; align-items: center;">
               <button type="button" class="matrix-tool-btn" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="PlanView.openDatesModal('edit', '${plan.weekOf}')">
-                🗓️ Adjust Schedule Range
+                ${Icons.render('calendar', 13)} Adjust Schedule Range
               </button>
             </div>
           </div>
@@ -297,12 +323,12 @@ const MatrixView = {
             <table class="matrix-table matrix-grid-table">
               <thead>
                 <tr>
-                  <th style="width: 120px;">Day / Date</th>
-                  <th>🥞 Breakfast</th>
-                  <th>🥗 Lunch</th>
-                  <th style="min-width: 180px;">🍽️ Dinner</th>
-                  <th>🥨 Snack / Dessert</th>
-                  <th style="width: 60px; text-align: center;">Clear</th>
+                  <th style="width: 86px;">Day</th>
+                  <th><span style="display: inline-flex; align-items: center; gap: 0.25rem;">${Icons.render('sun', 12)} Breakfast</span></th>
+                  <th><span style="display: inline-flex; align-items: center; gap: 0.25rem;">${Icons.render('utensils', 12)} Lunch</span></th>
+                  <th><span style="display: inline-flex; align-items: center; gap: 0.25rem;">${Icons.render('flame', 12)} Dinner</span></th>
+                  <th><span style="display: inline-flex; align-items: center; gap: 0.25rem;">${Icons.render('sparkles', 12)} Snack</span></th>
+                  <th style="width: 46px; text-align: center;" title="Clear Day">Clr</th>
                 </tr>
               </thead>
               <tbody>
@@ -314,8 +340,8 @@ const MatrixView = {
                     <tr class="matrix-day-row ${isSelected ? 'selected-day-row' : ''}" onclick="MatrixView.selectActiveDay('${d.dateStr}')">
                       <!-- Day Column -->
                       <td class="matrix-day-cell">
-                        <div style="font-weight: 700; color: #f8fafc; font-size: 0.9rem;">${d.dayShort}</div>
-                        <div style="font-size: 0.75rem; color: var(--accent-cyan); font-family: monospace;">${d.monthShort} ${d.dayNum}</div>
+                        <div style="font-weight: 700; color: var(--text); font-size: 0.9rem;">${d.dayShort}</div>
+                        <div style="font-size: 0.75rem; color: var(--accent); font-family: monospace;">${d.monthShort} ${d.dayNum}</div>
                         ${isSelected ? `<span class="matrix-active-indicator">Target</span>` : ''}
                       </td>
 
@@ -342,7 +368,7 @@ const MatrixView = {
                       <!-- Clear Day -->
                       <td style="text-align: center;">
                         ${dayMeals.length > 0 ? `
-                          <button type="button" class="matrix-btn-danger-cell" onclick="event.stopPropagation(); MatrixView.clearDayMeals('${d.dateStr}')" title="Clear all meals on ${d.dayName}">✕</button>
+                          <button type="button" class="matrix-btn-danger-cell" onclick="event.stopPropagation(); MatrixView.clearDayMeals('${d.dateStr}')" title="Clear all meals on ${d.dayName}">${Icons.render('close', 12)}</button>
                         ` : ''}
                       </td>
                     </tr>
@@ -357,31 +383,38 @@ const MatrixView = {
         <aside class="matrix-pane matrix-pane-right">
           <div class="matrix-pane-header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span class="matrix-pane-title">🛒 Live Grocery & Pantry Sync</span>
+              <span class="matrix-pane-title">${Icons.render('cart', 15)} Live Grocery & Pantry Sync</span>
               <span class="matrix-badge">${planIngredients.length} Needed</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem;">
-              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600;">
-                ✓ ${pantryMatches.length} in Pantry
+              <span style="font-size: 0.75rem; color: var(--success); font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;">
+                ${Icons.render('check', 13)} ${pantryMatches.length} in Pantry
               </span>
               <button type="button" class="matrix-tool-btn" style="padding: 0.15rem 0.45rem; font-size: 0.7rem;" onclick="MatrixView.checkAllPantryMatches()">
-                ✓ Check Pantry
+                ${Icons.render('check', 12)} Check Pantry
               </button>
             </div>
           </div>
 
           <div class="matrix-pane-body">
-            <table class="matrix-table matrix-table-dense">
+            <table class="matrix-table matrix-table-dense" style="table-layout: fixed; width: 100%;">
               <thead>
                 <tr>
-                  <th style="width: 24px;">[✓]</th>
-                  <th>Ingredient Need</th>
-                  <th style="width: 75px; text-align: center;">Pantry Stock</th>
+                  <th style="width: 36px; text-align: center;">[✓]</th>
+                  <th>Ingredient</th>
+                  <th style="width: 76px; text-align: center;">Stock</th>
                 </tr>
               </thead>
               <tbody>
                 ${planIngredients.length === 0 ? `
-                  <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Add meals to the matrix to calculate groceries.</td></tr>
+                  <tr>
+                    <td colspan="3" style="text-align: center; padding: 2rem 1rem;">
+                      <div style="color: var(--text-muted); margin-bottom: 0.4rem; display: flex; justify-content: center;">${Icons.render('cart', 24)}</div>
+                      <div style="font-weight: 600; color: var(--text-secondary); font-size: 0.84rem; margin-bottom: 0.25rem;">No Meals Scheduled Yet</div>
+                      <div style="color: var(--text-muted); font-size: 0.76rem; line-height: 1.4; margin-bottom: 0.75rem;">Click <strong>+</strong> in the Recipe Catalog or any meal slot to auto-calculate needed groceries and pantry matches.</div>
+                      ${catalogRecipes.length > 0 ? `<button type="button" class="btn btn-outline btn-xs" onclick="MatrixView.quickAssignRecipe('${catalogRecipes[0].id}')">+ Quick-Assign First Recipe</button>` : ''}
+                    </td>
+                  </tr>
                 ` : planIngredients.map(ing => {
                   const match = matchedIngMap.get(ing.id);
                   return `
@@ -389,17 +422,17 @@ const MatrixView = {
                       <td style="text-align: center;">
                         <input type="checkbox" ${ing.checked ? 'checked' : ''} onchange="MatrixView.toggleSyncIngredientCheck('${ing.id}')" style="accent-color: var(--primary); cursor: pointer;">
                       </td>
-                      <td>
-                        <div style="font-weight: 500; font-size: 0.825rem; color: #f8fafc;">
-                          ${ing.quantity ? `<span style="color: var(--accent-cyan); font-family: monospace;">${ing.quantity}</span> ` : ''}${ing.ingredient}
+                      <td style="min-width: 0; word-break: break-word;">
+                        <div style="font-weight: 500; font-size: 0.825rem; color: var(--text);">
+                          ${ing.quantity ? `<span style="color: var(--accent); font-family: monospace;">${ing.quantity}</span> ` : ''}${ing.ingredient}
                         </div>
                         ${ing.fromRecipe ? `<div style="font-size: 0.7rem; color: var(--text-muted);">${ing.fromRecipe}</div>` : ''}
                       </td>
                       <td style="text-align: center;">
                         ${match ? `
-                          <span class="matrix-status-badge in-stock" title="In Pantry: ${match.name} (${match.quantity || 'In Stock'})">✓ Have</span>
+                          <span class="matrix-status-badge in-stock" title="In Pantry: ${match.name} (${match.quantity || 'In Stock'})" style="display: inline-flex; align-items: center; gap: 0.2rem;">${Icons.render('check', 11)} Have</span>
                         ` : `
-                          <span class="matrix-status-badge need-buy">🛒 Need</span>
+                          <span class="matrix-status-badge need-buy" style="display: inline-flex; align-items: center; gap: 0.2rem;">${Icons.render('cart', 11)} Need</span>
                         `}
                       </td>
                     </tr>
@@ -461,7 +494,7 @@ const MatrixView = {
               <span class="matrix-meal-multiplier-badge" onclick="event.stopPropagation(); MatrixView.cycleMultiplier('${m.recipeId}', '${dayObj.dateStr}', ${mult})" title="Click to cycle portion: 0.5x, 1x, 1.5x, 2x">
                 ${mult}x
               </span>
-              <button type="button" class="matrix-meal-chip-del" onclick="event.stopPropagation(); MatrixView.removeMealFromDay('${m.recipeId}', '${dayObj.dateStr}')" title="Remove meal">✕</button>
+              <button type="button" class="matrix-meal-chip-del" onclick="event.stopPropagation(); MatrixView.removeMealFromDay('${m.recipeId}', '${dayObj.dateStr}')" title="Remove meal">${Icons.render('close', 11)}</button>
             </div>
           `;
         }).join('')}
@@ -647,12 +680,12 @@ const MatrixView = {
       <div class="matrix-full-sheet-card">
         <div class="matrix-sheet-header-row">
           <div>
-            <h3 style="margin: 0; font-size: 1.15rem; color: #f8fafc;">📖 Recipe Master Database</h3>
+            <h3 class="section-heading" style="font-size: 1.15rem;">${Icons.render('book', 18)} Recipe Master Database</h3>
             <span style="font-size: 0.8rem; color: var(--text-muted);">${list.length} Total Recipes</span>
           </div>
           <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-sm" onclick="RecipesView.openCreateModal()">➕ Add Recipe</button>
-            <button class="btn btn-outline btn-sm" onclick="RecipesView.openImportModal()">📥 Import</button>
+            <button class="btn btn-sm" onclick="RecipesView.openCreateModal()">${Icons.render('plus', 14)} Add Recipe</button>
+            <button class="btn btn-outline btn-sm" onclick="RecipesView.openImportModal()">${Icons.render('download', 14)} Import</button>
           </div>
         </div>
 
@@ -660,7 +693,7 @@ const MatrixView = {
           <table class="matrix-table matrix-table-dense matrix-sheet-full-table">
             <thead>
               <tr>
-                <th style="width: 32px; text-align: center;">Fav</th>
+                <th style="width: 36px; text-align: center;">Fav</th>
                 <th class="matrix-sortable-th" onclick="MatrixView.toggleSort('title')">Recipe Title ↕</th>
                 <th class="matrix-sortable-th" style="width: 70px; text-align: right;" onclick="MatrixView.toggleSort('prepTime')">Prep ↕</th>
                 <th class="matrix-sortable-th" style="width: 70px; text-align: right;" onclick="MatrixView.toggleSort('cookTime')">Cook ↕</th>
@@ -676,16 +709,16 @@ const MatrixView = {
               ${list.map(r => `
                 <tr ondblclick="RecipeCard.openModal('${r.id}')" title="Double click to open recipe details">
                   <td style="text-align: center; cursor: pointer;" onclick="RecipesView.toggleFavorite('${r.id}')">
-                    ${r.favorite ? '⭐' : '☆'}
+                    ${r.favorite ? `<span style="color: var(--primary); display: inline-flex;">${Icons.render('heart', 14, '', true)}</span>` : `<span style="color: var(--text-muted); display: inline-flex;">${Icons.render('heart', 14)}</span>`}
                   </td>
-                  <td style="font-weight: 600; color: #f8fafc;">
+                  <td style="font-weight: 600; color: var(--text);">
                     <a href="javascript:void(0)" onclick="RecipeCard.openModal('${r.id}')" style="color: inherit; text-decoration: none;">
                       ${r.title}
                     </a>
                   </td>
                   <td style="text-align: right; font-family: monospace;">${r.prepTime || 0}m</td>
                   <td style="text-align: right; font-family: monospace;">${r.cookTime || 0}m</td>
-                  <td style="text-align: right; font-family: monospace; color: var(--accent-cyan); font-weight: 700;">
+                  <td style="text-align: right; font-family: monospace; color: var(--accent); font-weight: 700;">
                     ${r.totalTime || (r.prepTime || 0) + (r.cookTime || 0) || 0}m
                   </td>
                   <td style="text-align: right; font-family: monospace;">${r.servings || 4}</td>
@@ -696,12 +729,12 @@ const MatrixView = {
                   </td>
                   <td style="text-align: right; font-family: monospace;">${(r.ingredients || []).length} items</td>
                   <td class="matrix-cell-truncate" style="max-width: 140px;">
-                    ${r.source ? `<a href="${r.source}" target="_blank" style="color: var(--accent-cyan); text-decoration: none;">${r.source.replace(/^https?:\/\//, '')}</a>` : '—'}
+                    ${r.source ? `<a href="${r.source}" target="_blank" style="color: var(--primary); text-decoration: none;">${r.source.replace(/^https?:\/\//, '')}</a>` : '—'}
                   </td>
                   <td style="text-align: center;">
                     <div style="display: flex; gap: 0.25rem; justify-content: center;">
-                      <button class="matrix-btn-cell" onclick="RecipesView.openEditModal('${r.id}')" title="Edit">✏️</button>
-                      <button class="matrix-btn-cell" onclick="PlanView.openDayModal([], 'Dinner', null, 1, '${r.id}')" title="Plan">📅</button>
+                      <button class="matrix-btn-cell" onclick="RecipesView.openEditModal('${r.id}')" title="Edit">${Icons.render('edit', 13)}</button>
+                      <button class="matrix-btn-cell" onclick="PlanView.openDayModal([], 'Dinner', null, 1, '${r.id}')" title="Plan">${Icons.render('calendar', 13)}</button>
                     </div>
                   </td>
                 </tr>
@@ -741,11 +774,11 @@ const MatrixView = {
       <div class="matrix-full-sheet-card">
         <div class="matrix-sheet-header-row">
           <div>
-            <h3 style="margin: 0; font-size: 1.15rem; color: #f8fafc;">🥫 Kitchen Pantry Inventory Sheet</h3>
+            <h3 class="section-heading" style="font-size: 1.15rem;">${Icons.render('pantry', 18)} Kitchen Pantry Inventory Sheet</h3>
             <span style="font-size: 0.8rem; color: var(--text-muted);">${list.length} On-Hand Records</span>
           </div>
           <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-sm" onclick="PantryView.triggerPhotoScan()">📷 AI Photo Scan</button>
+            <button class="btn btn-sm" onclick="PantryView.triggerPhotoScan()">${Icons.render('camera', 14)} AI Photo Scan</button>
           </div>
         </div>
 
@@ -766,17 +799,17 @@ const MatrixView = {
                   <td>
                     <span class="matrix-category-badge">${i.category || 'Pantry'}</span>
                   </td>
-                  <td style="font-weight: 600; color: #f8fafc; cursor: pointer;" onclick="MatrixView.editPantryField('${i.id}', 'name', '${i.name.replace(/'/g, "\\'")}')" title="Click to edit item name">
-                    ${i.name} ✏️
+                  <td style="font-weight: 600; color: var(--text); cursor: pointer;" onclick="MatrixView.editPantryField('${i.id}', 'name', '${i.name.replace(/'/g, "\\'")}')" title="Click to edit item name">
+                    ${i.name} <span style="color: var(--text-muted); margin-left: 0.25rem;">${Icons.render('edit', 12)}</span>
                   </td>
-                  <td style="color: var(--accent-cyan); font-family: monospace; cursor: pointer;" onclick="MatrixView.editPantryField('${i.id}', 'quantity', '${(i.quantity || '').replace(/'/g, "\\'")}')" title="Click to edit quantity">
-                    ${i.quantity || '+ add quantity'} ✏️
+                  <td style="color: var(--accent); font-family: monospace; cursor: pointer;" onclick="MatrixView.editPantryField('${i.id}', 'quantity', '${(i.quantity || '').replace(/'/g, "\\'")}')" title="Click to edit quantity">
+                    ${i.quantity || '+ add quantity'} <span style="color: var(--text-muted); margin-left: 0.25rem;">${Icons.render('edit', 12)}</span>
                   </td>
                   <td style="color: var(--text-muted); font-size: 0.775rem;">
                     ${i.addedAt ? new Date(i.addedAt).toLocaleDateString() : '—'}
                   </td>
                   <td style="text-align: center;">
-                    <button class="matrix-btn-danger-cell" onclick="MatrixView.deletePantryItem('${i.id}', '${i.name.replace(/'/g, "\\'")}')" title="Delete">✕</button>
+                    <button class="matrix-btn-danger-cell" onclick="MatrixView.deletePantryItem('${i.id}', '${i.name.replace(/'/g, "\\'")}')" title="Delete">${Icons.render('close', 12)}</button>
                   </td>
                 </tr>
               `).join('')}
@@ -837,12 +870,12 @@ const MatrixView = {
       <div class="matrix-full-sheet-card">
         <div class="matrix-sheet-header-row">
           <div>
-            <h3 style="margin: 0; font-size: 1.15rem; color: #f8fafc;">🛒 Grocery Master Checklist Sheet</h3>
+            <h3 class="section-heading" style="font-size: 1.15rem;">${Icons.render('cart', 18)} Grocery Master Checklist Sheet</h3>
             <span style="font-size: 0.8rem; color: var(--text-muted);">${allItems.length} Items</span>
           </div>
           <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-outline btn-sm" onclick="GroceryView.clearCheckedItems()">🧹 Clear Completed</button>
-            <button class="btn btn-sm" onclick="GroceryView.regenerate()">🔄 Rebuild from Plan</button>
+            <button class="btn btn-outline btn-sm" onclick="GroceryView.clearCheckedItems()">${Icons.render('trash', 14)} Clear Completed</button>
+            <button class="btn btn-sm" onclick="GroceryView.regenerate()">${Icons.render('refresh', 14)} Rebuild from Plan</button>
           </div>
         </div>
 
@@ -850,7 +883,7 @@ const MatrixView = {
           <table class="matrix-table matrix-table-dense matrix-sheet-full-table">
             <thead>
               <tr>
-                <th style="width: 32px; text-align: center;">[✓]</th>
+                <th style="width: 36px; text-align: center;">[✓]</th>
                 <th style="width: 140px;">Category</th>
                 <th>Ingredient Item</th>
                 <th style="width: 120px;">Quantity</th>
@@ -867,17 +900,17 @@ const MatrixView = {
                   <td>
                     <span class="matrix-category-badge">${i.category}</span>
                   </td>
-                  <td style="font-weight: 500; color: #f8fafc;">
+                  <td style="font-weight: 500; color: var(--text);">
                     ${i.ingredient}
                   </td>
-                  <td style="font-family: monospace; color: var(--accent-cyan);">
+                  <td style="font-family: monospace; color: var(--accent);">
                     ${i.quantity || '—'}
                   </td>
                   <td style="font-size: 0.8rem; color: var(--text-muted);">
                     ${(i.fromRecipes || []).join(', ') || (i.isCustom ? 'Custom' : '—')}
                   </td>
                   <td style="text-align: center;">
-                    <button class="matrix-btn-danger-cell" onclick="MatrixView.deleteMasterGroceryItem('${i.id}')" title="Delete">✕</button>
+                    <button class="matrix-btn-danger-cell" onclick="MatrixView.deleteMasterGroceryItem('${i.id}')" title="Delete">${Icons.render('close', 12)}</button>
                   </td>
                 </tr>
               `).join('')}

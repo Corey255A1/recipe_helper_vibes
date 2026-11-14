@@ -16,7 +16,7 @@ const RecipeCard = {
       tagsHtml = visibleTags.map(t => `<span class="tag">${t}</span>`).join('');
       if (remainingCount > 0) {
         const remainingList = rawTags.slice(2).join(', ');
-        tagsHtml += `<span class="tag tag-more" title="${remainingList}">+${remainingCount} more</span>`;
+        tagsHtml += `<span class="tag tag-more" title="${remainingList}">+${remainingCount}</span>`;
       }
     }
 
@@ -24,54 +24,57 @@ const RecipeCard = {
     const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent((recipe.title || 'recipe') + ' recipe')}`;
 
     if (recipe.pdfPath) {
-      extLinkHtml = `<a href="${recipe.pdfPath}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="recipe-link-btn" title="Open PDF">📄 PDF ↗</a>`;
+      extLinkHtml = `<a href="${recipe.pdfPath}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="recipe-link-btn" title="Open PDF">PDF ${Icons.render('external', 12)}</a>`;
     } else if (recipe.source && (recipe.source.startsWith('http://') || recipe.source.startsWith('https://'))) {
       const isSearch = /google\.[a-z.]+\/search|bing\.com|duckduckgo/i.test(recipe.source);
       let domain = 'Web';
       try {
         domain = isSearch ? 'Search' : new URL(recipe.source).hostname.replace('www.', '');
       } catch (e) {}
-      extLinkHtml = `<a href="${recipe.source}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="recipe-link-btn" title="Open recipe (${recipe.source})">${isSearch ? '🔍 Recipe ↗' : `🌐 ${domain} ↗`}</a>`;
+      extLinkHtml = `<a href="${recipe.source}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="recipe-link-btn" title="Open recipe (${recipe.source})">${isSearch ? 'Recipe' : domain} ${Icons.render('external', 12)}</a>`;
     } else if (recipe.source === 'web' || isSuggestion) {
-      extLinkHtml = `<a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="recipe-link-btn" title="Find recipe on Google">🔍 Recipe ↗</a>`;
+      extLinkHtml = `<a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="recipe-link-btn" title="Find recipe on Google">Recipe ${Icons.render('external', 12)}</a>`;
     }
 
     const isFav = Boolean(recipe.favorite);
     const favBtnHtml = !isSuggestion ? `
       <button onclick="event.stopPropagation(); RecipesView.toggleFavorite('${recipe.id}')" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}" class="btn-fav ${isFav ? 'active' : ''}">
-        ${isFav ? '❤️' : '🤍'}
+        ${Icons.render('heart', 16, '', isFav)}
       </button>
     ` : '';
 
     const neverBtnHtml = isSuggestion ? `
       <button onclick="PlanView.decide('${recipe.id}', 'never')" title="Never recommend this recipe again" class="btn-never-tertiary">
-        ✕ Don't show
+        ${Icons.render('close', 12)} Don't show
       </button>
     ` : '';
 
+    const totalTime = recipe.totalTime || ((recipe.prepTime || 0) + (recipe.cookTime || 0)) || 20;
+
     return `
-      <div class="recipe-card" data-id="${recipe.id}" onclick="RecipeCard.openModal('${recipe.id}')" style="cursor: pointer;">
+      <div class="recipe-card" data-id="${recipe.id}" onclick="RecipeCard.openModal('${recipe.id}')">
         <div class="card-left" style="flex: 1; min-width: 0;">
           <!-- Row 1: Title & Actions -->
-          <div class="card-title-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; width: 100%;">
-            <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0; color: #f8fafc; flex: 1; text-align: left; line-height: 1.3;">${recipe.title}</h3>
-            <div style="display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;" onclick="event.stopPropagation()">
+          <div class="card-title-row">
+            <h3 class="card-title">${recipe.title}</h3>
+            <div class="card-header-actions" onclick="event.stopPropagation()">
               ${favBtnHtml}
-              ${extLinkHtml}
               ${neverBtnHtml}
             </div>
           </div>
-          
-          <!-- Row 2: Meta Pills -->
-          <div class="card-meta-row" style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; margin-bottom: 0.55rem; align-items: center; width: 100%;">
-            <span style="background: rgba(255, 255, 255, 0.05); padding: 0.15rem 0.45rem; border-radius: 0.35rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary); white-space: nowrap;">⏱️ ${recipe.totalTime || ((recipe.prepTime || 0) + (recipe.cookTime || 0)) || 20}m</span>
-            <span style="background: rgba(255, 255, 255, 0.05); padding: 0.15rem 0.45rem; border-radius: 0.35rem; font-size: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary); white-space: nowrap;">🍽️ ${recipe.servings || 4} servings</span>
-            ${tagsHtml}
+
+          <!-- Row 2: Inline Meta & Subtle External Link -->
+          <div class="card-meta-inline">
+            <span class="card-meta-stat">${Icons.render('clock', 13)} ${totalTime}m</span>
+            <span class="card-meta-stat">${Icons.render('users', 13)} ${recipe.servings || 4} servings</span>
+            ${extLinkHtml}
           </div>
+
+          ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
         </div>
-        
+
         <!-- Row 3: Actions -->
-        <div class="card-actions-wrapper" style="margin-top: auto; width: 100%;" onclick="event.stopPropagation()">
+        <div class="card-actions-wrapper" onclick="event.stopPropagation()">
           ${actionsHtml}
         </div>
       </div>
@@ -136,32 +139,32 @@ const RecipeCard = {
     const isFav = Boolean(recipe.favorite);
 
     const wakeLockBtnHtml = hasWakeLock ? `
-      <button class="btn btn-sm ${isWakeLocked ? 'btn-wake-active' : 'btn-outline'}" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" onclick="RecipeCard.toggleWakeLock()" title="Keep screen awake while cooking">
-        ${isWakeLocked ? '🔆 Awake: ON' : '💡 Screen Awake'}
+      <button class="btn btn-outline btn-sm ${isWakeLocked ? 'btn-wake-active' : ''}" onclick="RecipeCard.toggleWakeLock()" title="Keep screen awake while cooking">
+        ${isWakeLocked ? `${Icons.render('sun', 14)} Awake: ON` : `${Icons.render('lightbulb', 14)} <span class="hide-xs">Screen </span>Awake`}
       </button>
     ` : '';
 
-    const tags = (recipe.tags || []).map(t => `<span class="tag" style="font-size: 0.75rem; padding: 0.15rem 0.5rem;">${t}</span>`).join('');
-    
+    const tags = (recipe.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+
     let sourceLinkHtml = '';
     const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent((recipe.title || 'recipe') + ' recipe')}`;
 
     if (recipe.pdfPath) {
-      sourceLinkHtml = `<a href="${recipe.pdfPath}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.65rem;">📄 Open PDF</a>`;
+      sourceLinkHtml = `<a href="${recipe.pdfPath}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">${Icons.render('fileText', 14)} PDF ${Icons.render('external', 12)}</a>`;
     } else if (recipe.source && (recipe.source.startsWith('http://') || recipe.source.startsWith('https://'))) {
       const isSearch = /google\.[a-z.]+\/search|bing\.com|duckduckgo/i.test(recipe.source);
-      let domain = isSearch ? 'Web Search' : 'Website';
+      let domain = isSearch ? 'Web' : 'Website';
       try {
         if (!isSearch) domain = new URL(recipe.source).hostname.replace('www.', '');
       } catch (e) {}
       sourceLinkHtml = `
-        <a href="${recipe.source}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.65rem; color: var(--accent-cyan); border-color: var(--accent-cyan);">
-          ${isSearch ? '🔍 Recipe on Web ↗' : `🌐 ${domain} ↗`}
+        <a href="${recipe.source}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+          ${isSearch ? `${Icons.render('search', 14)} Web` : domain} ${Icons.render('external', 12)}
         </a>
-        ${!isSearch ? `<a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.65rem;">🔍 Google ↗</a>` : ''}
+        ${!isSearch ? `<a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">${Icons.render('search', 14)} Google ${Icons.render('external', 12)}</a>` : ''}
       `;
     } else if (recipe.title) {
-      sourceLinkHtml = `<a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.65rem; color: var(--accent-cyan); border-color: var(--accent-cyan);">🔍 Google Recipe ↗</a>`;
+      sourceLinkHtml = `<a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">${Icons.render('search', 14)} Google ${Icons.render('external', 12)}</a>`;
     }
 
     const scaledIngredients = (recipe.ingredients || []).map((ing, idx) => {
@@ -187,102 +190,109 @@ const RecipeCard = {
     }).join('');
 
     const closeHandler = this.isStandalone ? 'RecipeCard.closeStandalone()' : 'RecipeCard.closeModal()';
+    const totalTime = recipe.totalTime || ((recipe.prepTime || 0) + (recipe.cookTime || 0)) || 20;
 
     container.innerHTML = `
       ${!this.isStandalone ? '<div class="modal-drag-pill"></div>' : ''}
-      
-      <!-- Top Navigation & Controls Bar (Optimized Margins) -->
-      <div class="top-nav-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; padding-bottom: 0.45rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.4rem;">
-        <button class="btn btn-outline btn-sm no-print" style="padding: 0.35rem 0.75rem; font-size: 0.825rem;" onclick="${closeHandler}">
-          ← Back
+
+      <!-- Top Navigation & Controls Bar -->
+      <div class="cook-top-bar no-print">
+        <button class="btn btn-outline btn-sm cook-back-btn" onclick="${closeHandler}">
+          ${Icons.render('arrowLeft', 14)} <span>Back</span>
         </button>
 
-        <div style="display: flex; align-items: center; gap: 0.4rem;" class="no-print">
+        <div class="cook-top-actions">
           ${wakeLockBtnHtml}
-          <button class="btn btn-outline btn-sm" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" onclick="RecipeCard.toggleFavorite('${recipe.id}')" title="Favorite">
-            ${isFav ? '❤️ Saved' : '🤍 Favorite'}
+          <button class="btn btn-outline btn-sm" onclick="RecipeCard.toggleFavorite('${recipe.id}')" title="Favorite">
+            ${Icons.render('heart', 14, '', isFav)} <span class="hide-xs">${isFav ? 'Saved' : 'Favorite'}</span>
           </button>
-          <button class="btn btn-outline btn-sm" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" onclick="window.print()" title="Print Recipe">
-            🖨️ Print
+          <button class="btn btn-outline btn-sm" onclick="window.print()" title="Print Recipe">
+            ${Icons.render('printer', 14)} <span class="hide-xs">Print</span>
           </button>
-          <button class="btn btn-outline btn-sm" style="padding: 0.3rem 0.55rem; font-size: 0.9rem; line-height: 1;" onclick="${closeHandler}" title="Close">✕</button>
+          <button class="icon-btn" onclick="${closeHandler}" title="Close">
+            ${Icons.render('close', 16)}
+          </button>
         </div>
       </div>
 
-      <h2 style="margin-top: 0; margin-bottom: 0.35rem; font-size: 1.35rem; color: #f8fafc; line-height: 1.25;">${recipe.title}</h2>
+      <h2 class="cook-recipe-title">${recipe.title}</h2>
 
-      <div class="recipe-meta" style="margin-bottom: 0.45rem; display: flex; gap: 0.35rem; flex-wrap: wrap; font-size: 0.825rem;">
-        <span>⏱️ Prep: ${recipe.prepTime || 0}m</span>
-        <span>🔥 Cook: ${recipe.cookTime || 0}m</span>
-        <span>⌛ Total: ${recipe.totalTime || ((recipe.prepTime || 0) + (recipe.cookTime || 0)) || 20}m</span>
-        <span>🍽️ ${scaledServings} servings</span>
+      <div class="recipe-meta card-meta-inline" style="margin-top: 0; margin-bottom: 0.4rem; gap: 0.75rem;">
+        <span class="card-meta-stat">${Icons.render('clock', 14)} Prep: ${recipe.prepTime || 0}m</span>
+        <span class="card-meta-stat">${Icons.render('flame', 14)} Cook: ${recipe.cookTime || 0}m</span>
+        <span class="card-meta-stat">${Icons.render('clock', 14)} Total: ${totalTime}m</span>
+        <span class="card-meta-stat">${Icons.render('users', 14)} ${scaledServings} servings</span>
       </div>
 
-      ${tags ? `<div class="tags" style="margin-bottom: 0.55rem;">${tags}</div>` : ''}
+      ${tags ? `<div class="tags" style="margin-top: 0; margin-bottom: 0.5rem; flex-wrap: wrap;">${tags}</div>` : ''}
 
-      <!-- Quick Action Toolbar (Optimized Margins) -->
-      <div class="quick-actions-bar no-print" style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.65rem; align-items: center;">
-        <button class="btn btn-sm" style="background: var(--success); padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="RecipeCard.quickAddToPlan('${recipe.id}')">➕ Add to Plan</button>
-        <button class="btn btn-outline btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="RecipeCard.editCurrentRecipe()">✏️ Edit</button>
-        ${!this.isStandalone ? `<button class="btn btn-outline btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" onclick="RecipeCard.openStandalone('${recipe.id}')">↗️ Popout</button>` : ''}
+      <!-- Quick Action Toolbar -->
+      <div class="quick-actions-bar no-print" style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem; align-items: center;">
+        <button class="btn btn-sm" onclick="RecipeCard.quickAddToPlan('${recipe.id}')">${Icons.render('plus', 14)} Add to Plan</button>
+        <button class="btn btn-secondary btn-sm" onclick="RecipeCard.editCurrentRecipe()">${Icons.render('edit', 14)} Edit</button>
+        ${!this.isStandalone ? `<button class="btn btn-outline btn-sm" onclick="RecipeCard.openStandalone('${recipe.id}')">${Icons.render('external', 14)} Popout</button>` : ''}
         ${sourceLinkHtml}
       </div>
 
       <!-- Cook Mode Controls & Serving Scaler -->
       <div class="cook-scaler-panel no-print">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem;">
-          <div>
-            <span style="font-weight: 700; font-size: 0.8rem; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.5px;">Portion Scaler</span>
-            <div style="font-size: 0.825rem; color: var(--text-secondary);">Currently: <strong>${scaledServings} servings</strong> (${this.servingMultiplier}x)</div>
-          </div>
-          <div class="serving-multiplier-buttons">
-            <button class="btn btn-sm ${this.servingMultiplier === 0.5 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(0.5)">½x</button>
-            <button class="btn btn-sm ${this.servingMultiplier === 1 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(1)">1x</button>
-            <button class="btn btn-sm ${this.servingMultiplier === 1.5 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(1.5)">1.5x</button>
-            <button class="btn btn-sm ${this.servingMultiplier === 2 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(2)">2x</button>
-            <button class="btn btn-sm ${this.servingMultiplier === 3 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(3)">3x</button>
-            <button class="btn btn-sm ${this.servingMultiplier === 4 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(4)">4x</button>
-          </div>
+        <div style="display: flex; align-items: baseline; gap: 0.45rem; flex-wrap: wrap;">
+          <span class="field-kicker" style="color: var(--primary); margin: 0;">Portions</span>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);"><strong>${scaledServings} servings</strong> (${this.servingMultiplier}x)</span>
+        </div>
+        <div class="serving-multiplier-buttons">
+          <button class="btn btn-sm ${this.servingMultiplier === 0.5 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(0.5)">½x</button>
+          <button class="btn btn-sm ${this.servingMultiplier === 1 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(1)">1x</button>
+          <button class="btn btn-sm ${this.servingMultiplier === 1.5 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(1.5)">1.5x</button>
+          <button class="btn btn-sm ${this.servingMultiplier === 2 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(2)">2x</button>
+          <button class="btn btn-sm ${this.servingMultiplier === 3 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(3)">3x</button>
+          <button class="btn btn-sm ${this.servingMultiplier === 4 ? '' : 'btn-outline'}" onclick="RecipeCard.setServingMultiplier(4)">4x</button>
         </div>
       </div>
 
-      <!-- Ingredients Section with Interactive Checklist -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; margin-bottom: 0.35rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
-        <h3 style="font-size: 1.05rem; margin: 0; color: var(--accent-cyan);">Ingredients</h3>
-        <span class="no-print" style="font-size: 0.725rem; color: var(--text-muted);">Tap item to strike off</span>
-      </div>
-      <ul class="cook-mode-list" style="margin-bottom: 0.75rem; list-style: none; padding-left: 0;">
-        ${scaledIngredients}
-      </ul>
+      <div class="cook-sections-grid">
+        <div class="cook-section-col">
+          <!-- Ingredients Section with Interactive Checklist -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; margin-bottom: 0.4rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem;">
+            <h3 style="font-size: 1.05rem; margin: 0; color: var(--text);">Ingredients</h3>
+            <span class="no-print" style="font-size: 0.725rem; color: var(--text-muted);">Tap item to strike off</span>
+          </div>
+          <ul class="cook-mode-list" style="margin-bottom: 0.75rem; list-style: none; padding-left: 0;">
+            ${scaledIngredients}
+          </ul>
+        </div>
 
-      <!-- Instructions Section with Inline Timers -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; margin-bottom: 0.35rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
-        <h3 style="font-size: 1.05rem; margin: 0; color: var(--accent-cyan);">Instructions</h3>
-        <span class="no-print" style="font-size: 0.725rem; color: var(--text-muted);">Tap step to mark complete</span>
+        <div class="cook-section-col">
+          <!-- Instructions Section with Inline Timers -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; margin-bottom: 0.4rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem;">
+            <h3 style="font-size: 1.05rem; margin: 0; color: var(--text);">Instructions</h3>
+            <span class="no-print" style="font-size: 0.725rem; color: var(--text-muted);">Tap step to mark complete</span>
+          </div>
+          <ol class="cook-mode-steps" style="margin-bottom: 0.75rem; list-style: none; padding-left: 0;">
+            ${formattedInstructions}
+          </ol>
+        </div>
       </div>
-      <ol class="cook-mode-steps" style="margin-bottom: 0.75rem; list-style: none; padding-left: 0;">
-        ${formattedInstructions}
-      </ol>
 
       ${recipe.notes ? `
         <div style="margin-top: 0.85rem; margin-bottom: 0.65rem;">
-          <h3 style="font-size: 1.05rem; margin-bottom: 0.35rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; color: var(--accent-cyan);">Notes & Tips</h3>
-          <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.5; margin: 0;">${recipe.notes}</p>
+          <h3 style="font-size: 1.05rem; margin-bottom: 0.35rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; color: var(--text);">Notes & Tips</h3>
+          <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5; margin: 0;">${recipe.notes}</p>
         </div>
       ` : ''}
 
-      <!-- Bottom Actions Footer (Optimized Margins) -->
-      <div class="bottom-actions-bar no-print" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.65rem; border-top: 1px solid var(--border); gap: 0.5rem; flex-wrap: wrap;">
-        <button class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="${closeHandler}">
-          ← Done / Close
+      <!-- Bottom Actions Footer -->
+      <div class="bottom-actions-bar no-print" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); gap: 0.5rem; flex-wrap: wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="${closeHandler}">
+          ${Icons.render('arrowLeft', 14)} Done / Close
         </button>
 
-        <button class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="window.print()">
-          🖨️ Print
+        <button class="btn btn-outline btn-sm" onclick="window.print()">
+          ${Icons.render('printer', 14)} Print
         </button>
-        
-        <button class="btn btn-outline" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); font-size: 0.825rem; padding: 0.45rem 0.85rem;" onclick="RecipeCard.confirmDeleteCurrent()">
-          🗑️ Delete Recipe
+
+        <button class="btn btn-danger-outline btn-sm" onclick="RecipeCard.confirmDeleteCurrent()">
+          ${Icons.render('trash', 14)} Delete Recipe
         </button>
       </div>
     `;

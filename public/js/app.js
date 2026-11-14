@@ -9,6 +9,8 @@ const App = {
   },
   
   async init() {
+    if (window.Theme) Theme.init();
+
     // Render all views into DOM (hidden by default)
     const root = document.getElementById('app-root');
     for (const [name, view] of Object.entries(this.views)) {

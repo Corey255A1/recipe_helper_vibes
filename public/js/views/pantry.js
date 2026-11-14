@@ -24,44 +24,42 @@ const PantryView = {
     return `
       <div class="view" id="pantry-view">
         <!-- Header & Action Bar -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div class="page-header">
           <div>
-            <div style="display: flex; align-items: center; gap: 0.6rem;">
-              <h2 style="margin: 0; font-size: 1.65rem;">🥫 Kitchen Pantry</h2>
-              <span id="pantry-total-count" class="category-badge" style="background: rgba(0, 240, 255, 0.15); color: var(--accent-cyan); font-weight: 700; border: 1px solid rgba(0, 240, 255, 0.3);">0 items</span>
+            <div class="page-title-group">
+              <h2>${Icons.render('pantry', 22)} Kitchen Pantry</h2>
+              <span id="pantry-total-count" class="pill-badge pill-badge-accent">0 items</span>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.2rem 0 0 0;">Record what you have on hand to prevent duplicate groceries.</p>
+            <p class="page-subtitle">Record what you have on hand to prevent duplicate groceries.</p>
           </div>
           
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <div class="page-actions">
             <input type="file" id="pantry-camera-input" accept="image/*" capture="environment" style="display: none;" onchange="PantryView.handlePhotoUpload(event)">
             <input type="file" id="pantry-file-input" accept="image/*" style="display: none;" onchange="PantryView.handlePhotoUpload(event)">
             
-            <div style="display: flex; gap: 0.4rem;">
-              <button class="btn btn-sm" style="background: linear-gradient(135deg, #00f0ff, #00a8ff); color: #090d16; font-weight: 700;" onclick="PantryView.triggerPhotoScan()" id="pantry-scan-btn">
-                📷 Scan Photo with AI
-              </button>
-              <button class="btn btn-outline btn-sm" onclick="PantryView.clearAllItems()" title="Clear all pantry items">
-                🧹 Clear
-              </button>
-            </div>
+            <button class="btn btn-sm" onclick="PantryView.triggerPhotoScan()" id="pantry-scan-btn">
+              ${Icons.render('camera', 15)} Scan Photo with AI
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="PantryView.clearAllItems()" title="Clear all pantry items">
+              ${Icons.render('trash', 14)} Clear
+            </button>
           </div>
         </div>
 
         <!-- AI Scanning Progress Bar (hidden by default) -->
-        <div id="pantry-scan-progress" style="display: none; margin-bottom: 1.25rem; background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 0.85rem; padding: 1rem 1.25rem;">
+        <div id="pantry-scan-progress" style="display: none; margin-bottom: 1.25rem; background: var(--primary-soft); border: 1px solid var(--primary-border); border-radius: 0.85rem; padding: 1rem 1.25rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-size: 0.85rem;">
-            <span id="pantry-scan-status-text" style="font-weight: 600; color: #f8fafc;">Optimizing photo resolution...</span>
-            <span id="pantry-scan-spinner" class="spinner-small" style="width: 14px; height: 14px; border: 2px solid rgba(0,240,255,0.3); border-top-color: var(--accent-cyan); border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite;"></span>
+            <span id="pantry-scan-status-text" style="font-weight: 600; color: var(--text);">Optimizing photo resolution...</span>
+            <span id="pantry-scan-spinner" class="spinner-small" style="width: 14px; height: 14px; border: 2px solid var(--primary-border); border-top-color: var(--primary); border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite;"></span>
           </div>
           <div id="pantry-scan-details" style="font-size: 0.775rem; color: var(--text-muted);">Client downscale reduces upload size for instant AI response.</div>
         </div>
 
         <!-- Quick Add Manual Item Toolbar -->
-        <div class="grocery-quick-add-panel" style="margin-bottom: 1.25rem;">
+        <div class="grocery-quick-add-panel">
           <form onsubmit="PantryView.addManualItem(event)" style="display: flex; gap: 0.5rem; width: 100%; flex-wrap: wrap; align-items: center;">
-            <input type="text" id="pantry-item-name" placeholder="➕ Add item (e.g. Olive Oil, Garlic, Jasmine Rice)..." required style="margin-bottom: 0; flex: 2; min-width: 170px; padding: 0.65rem 0.85rem; font-size: 0.875rem;">
-            <input type="text" id="pantry-item-qty" placeholder="Qty (e.g. 1 bottle, 2 cans)..." style="margin-bottom: 0; flex: 1; min-width: 120px; padding: 0.65rem 0.85rem; font-size: 0.85rem;">
+            <input type="text" id="pantry-item-name" placeholder="Add item (e.g., Olive Oil)..." required style="margin-bottom: 0; flex: 2; min-width: 170px; padding: 0.65rem 0.85rem; font-size: 0.875rem;">
+            <input type="text" id="pantry-item-qty" placeholder="Qty (e.g., 1 bottle)" style="margin-bottom: 0; flex: 1; min-width: 120px; padding: 0.65rem 0.85rem; font-size: 0.85rem;">
             <select id="pantry-item-category" style="margin-bottom: 0; flex: 1; min-width: 130px; padding: 0.65rem 0.85rem; font-size: 0.85rem;">
               <option value="Produce">🥦 Produce</option>
               <option value="Dairy">🧀 Dairy</option>
@@ -72,15 +70,17 @@ const PantryView = {
               <option value="Frozen">🧊 Frozen</option>
               <option value="Other">🧼 Other</option>
             </select>
-            <button type="submit" class="btn btn-sm" style="padding: 0.65rem 1rem; font-weight: 600;">Add to Pantry</button>
+            <button type="submit" class="btn btn-sm" style="padding: 0.65rem 1rem;">
+              ${Icons.render('plus', 14)} Add to Pantry
+            </button>
           </form>
         </div>
 
         <!-- Search & Category Filter Pills -->
         <div style="margin-bottom: 1.25rem;">
-          <div style="position: relative; margin-bottom: 0.75rem;">
-            <input type="text" id="pantry-search-input" placeholder="🔍 Search pantry items..." oninput="PantryView.onSearchChange(this.value)" style="margin-bottom: 0; padding-left: 2.2rem; font-size: 0.9rem;">
-            <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); font-size: 0.9rem; pointer-events: none; opacity: 0.6;">🔍</span>
+          <div class="search-input-wrap" style="margin-bottom: 0.75rem;">
+            <span class="search-icon">${Icons.render('search', 16)}</span>
+            <input type="text" id="pantry-search-input" placeholder="Search pantry items..." oninput="PantryView.onSearchChange(this.value)" style="font-size: 0.9rem;">
           </div>
 
           <div class="category-pills" id="pantry-category-pills" style="display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.35rem; scrollbar-width: none;">
@@ -148,14 +148,14 @@ const PantryView = {
     if (allItems.length === 0) {
       container.innerHTML = `
         <div style="background: var(--surface); padding: 3rem 1.5rem; border-radius: 1.25rem; border: 1px solid var(--border); text-align: center;">
-          <div style="font-size: 2.75rem; margin-bottom: 0.5rem;">🥫</div>
+          <div style="color: var(--text-muted); margin-bottom: 0.75rem;">${Icons.render('pantry', 36)}</div>
           <h3 style="margin-bottom: 0.5rem;">Your pantry is empty</h3>
           <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 460px; margin: 0 auto 1.5rem auto;">
             Snap a quick photo of your fridge, pantry shelves, or grocery haul to let Gemini automatically catalog what you have, or add items manually above.
           </p>
           <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
-            <button class="btn btn-sm" style="background: linear-gradient(135deg, #00f0ff, #00a8ff); color: #090d16; font-weight: 700;" onclick="PantryView.triggerPhotoScan()">
-              📷 Take / Upload Photo
+            <button class="btn btn-sm" onclick="PantryView.triggerPhotoScan()">
+              ${Icons.render('camera', 15)} Take / Upload Photo
             </button>
           </div>
         </div>
@@ -181,7 +181,7 @@ const PantryView = {
     if (filtered.length === 0) {
       container.innerHTML = `
         <div style="background: var(--surface); padding: 2rem 1.5rem; border-radius: 1rem; border: 1px solid var(--border); text-align: center;">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+          <div style="color: var(--text-muted); margin-bottom: 0.5rem;">${Icons.render('search', 28)}</div>
           <p style="color: var(--text-secondary); margin: 0;">No items found matching your filter.</p>
         </div>
       `;
@@ -210,22 +210,22 @@ const PantryView = {
               <li class="grocery-item-row" style="cursor: default;">
                 <div class="grocery-item-info" style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 0.5rem;">
                   <div style="flex: 1; min-width: 0;">
-                    <span class="grocery-item-name" style="font-weight: 500; font-size: 0.95rem; color: #f8fafc; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <span class="grocery-item-name" style="font-weight: 500; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                       ${item.name}
                     </span>
                     ${item.quantity ? `
-                      <span class="pantry-item-qty-tag" onclick="PantryView.promptEditQuantity('${item.id}')" title="Click to edit quantity" style="font-size: 0.775rem; color: var(--accent-cyan); background: rgba(0, 240, 255, 0.08); padding: 0.15rem 0.45rem; border-radius: 0.35rem; cursor: pointer; display: inline-block; margin-top: 0.2rem;">
-                        🏷️ ${item.quantity} ✏️
+                      <span class="pantry-item-qty-tag" onclick="PantryView.promptEditQuantity('${item.id}')" title="Click to edit quantity">
+                        ${item.quantity} ${Icons.render('edit', 12)}
                       </span>
                     ` : `
-                      <span class="pantry-item-qty-tag" onclick="PantryView.promptEditQuantity('${item.id}')" title="Click to add quantity" style="font-size: 0.75rem; color: var(--text-muted); cursor: pointer; display: inline-block; margin-top: 0.2rem;">
-                        + add qty
+                      <span class="pantry-item-qty-tag" onclick="PantryView.promptEditQuantity('${item.id}')" title="Click to add quantity" style="color: var(--text-muted);">
+                        ${Icons.render('plus', 12)} add qty
                       </span>
                     `}
                   </div>
                   <div style="display: flex; gap: 0.35rem; align-items: center;">
-                    <button class="btn-remove-grocery-item" onclick="PantryView.deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')" title="Remove from pantry" style="color: var(--danger); font-size: 1rem; padding: 0.3rem 0.55rem;">
-                      ✕
+                    <button class="icon-btn danger" onclick="PantryView.deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')" title="Remove from pantry">
+                      ${Icons.render('close', 14)}
                     </button>
                   </div>
                 </div>
@@ -444,7 +444,7 @@ const PantryView = {
           </select>
         </div>
 
-        <button type="button" class="btn-remove-grocery-item pantry-verify-del-btn" onclick="PantryView.removeStagingItem('${item.uid}')" title="Delete row">✕</button>
+        <button type="button" class="icon-btn danger pantry-verify-del-btn" onclick="PantryView.removeStagingItem('${item.uid}')" title="Delete row">${Icons.render('close', 14)}</button>
       </div>
     `).join('');
   },

@@ -11,24 +11,26 @@ const GroceryView = {
   async render() {
     return `
       <div class="view" id="grocery-view">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div class="page-header">
           <div>
-            <h2 style="margin: 0; font-size: 1.65rem;">🛒 Grocery Checklist</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Checked items persist automatically across your devices.</p>
+            <div class="page-title-group">
+              <h2>${Icons.render('cart', 22)} Grocery Checklist</h2>
+            </div>
+            <p class="page-subtitle">Checked items persist automatically across your devices.</p>
           </div>
           
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <div class="page-actions">
             <button class="btn btn-outline btn-sm" onclick="GroceryView.toggleHideChecked()" id="grocery-hide-btn">
-              👁️ Hide Checked
+              ${Icons.render('eyeOff', 14)} Hide Checked
             </button>
             <button class="btn btn-outline btn-sm" onclick="GroceryView.clearCheckedItems()">
-              🧹 Clear Done
+              ${Icons.render('trash', 14)} Clear Done
             </button>
-            <button class="btn btn-sm" style="background: var(--accent-cyan); color: #090d16; font-weight: 700;" onclick="GroceryView.share()">
-              📤 Share
+            <button class="btn btn-secondary btn-sm" onclick="GroceryView.copy()">
+              ${Icons.render('copy', 14)} Copy
             </button>
-            <button class="btn btn-sm" onclick="GroceryView.copy()">
-              📋 Copy
+            <button class="btn btn-sm" onclick="GroceryView.share()">
+              ${Icons.render('share', 14)} Share
             </button>
           </div>
         </div>
@@ -41,28 +43,32 @@ const GroceryView = {
 
         <!-- Quick Add Custom Item Toolbar -->
         <div class="grocery-quick-add-panel">
-          <form onsubmit="GroceryView.addCustomItem(event)" style="display: flex; gap: 0.5rem; width: 100%; flex-wrap: wrap; align-items: center;">
-            <input type="text" id="grocery-custom-item-name" placeholder="➕ Add custom item (e.g. 1 gal Whole Milk, Paper towels)..." required style="margin-bottom: 0; flex: 2; min-width: 180px; padding: 0.65rem 0.85rem; font-size: 0.875rem;">
-            <select id="grocery-custom-item-category" style="margin-bottom: 0; flex: 1; min-width: 130px; padding: 0.65rem 0.85rem; font-size: 0.85rem;">
-              <option value="Produce">🥦 Produce</option>
-              <option value="Dairy">🧀 Dairy</option>
-              <option value="Proteins">🥩 Proteins</option>
-              <option value="Pantry" selected>🥫 Pantry</option>
-              <option value="Bakery">🍞 Bakery</option>
-              <option value="Frozen">🧊 Frozen</option>
-              <option value="Household / Other">🧼 Other</option>
-            </select>
-            <button type="submit" class="btn btn-sm" style="padding: 0.65rem 1rem;">Add Item</button>
+          <form class="grocery-quick-add-form" onsubmit="GroceryView.addCustomItem(event)">
+            <input type="text" id="grocery-custom-item-name" class="grocery-quick-add-input" placeholder="Add custom item (e.g., 1 gal Whole Milk)..." required>
+            <div class="grocery-quick-add-actions">
+              <select id="grocery-custom-item-category" class="grocery-quick-add-select">
+                <option value="Produce">🥦 Produce</option>
+                <option value="Dairy">🧀 Dairy</option>
+                <option value="Proteins">🥩 Proteins</option>
+                <option value="Pantry" selected>🥫 Pantry</option>
+                <option value="Bakery">🍞 Bakery</option>
+                <option value="Frozen">🧊 Frozen</option>
+                <option value="Household / Other">🧼 Other</option>
+              </select>
+              <button type="submit" class="btn btn-sm grocery-quick-add-btn">
+                ${Icons.render('plus', 14)} Add Item
+              </button>
+            </div>
           </form>
         </div>
 
         <!-- Shopping Progress Bar -->
-        <div id="grocery-progress-container" style="margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); padding: 0.85rem 1.25rem; border-radius: 0.85rem;">
+        <div id="grocery-progress-container" style="margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); padding: 0.85rem 1.25rem; border-radius: 0.85rem; box-shadow: var(--shadow);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-size: 0.85rem;">
-            <span style="font-weight: 600; color: #f8fafc;" id="grocery-progress-label">Shopping Progress</span>
-            <span style="color: var(--accent-cyan); font-weight: 700;" id="grocery-progress-pct">0%</span>
+            <span style="font-weight: 600; color: var(--text);" id="grocery-progress-label">Shopping Progress</span>
+            <span style="color: var(--primary); font-weight: 700;" id="grocery-progress-pct">0%</span>
           </div>
-          <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+          <div style="width: 100%; height: 8px; background: var(--surface-elevated); border-radius: 4px; overflow: hidden;">
             <div id="grocery-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); transition: width 0.3s ease;"></div>
           </div>
         </div>
@@ -70,7 +76,7 @@ const GroceryView = {
         <!-- Generate / Refresh Button Toolbar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
           <button class="btn btn-outline btn-sm" onclick="GroceryView.regenerate()">
-            🔄 Rebuild from Meal Plan
+            ${Icons.render('refresh', 14)} Rebuild from Meal Plan
           </button>
           <span style="font-size: 0.8rem; color: var(--text-muted);" id="grocery-updated-at"></span>
         </div>
@@ -194,10 +200,10 @@ const GroceryView = {
 
       content.innerHTML = `
         <div style="background: var(--surface); padding: 3rem 1.5rem; border-radius: 1.25rem; border: 1px solid var(--border); text-align: center;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛒</div>
+          <div style="color: var(--text-muted); margin-bottom: 0.75rem;">${Icons.render('cart', 36)}</div>
           <h3 style="margin-bottom: 0.5rem;">Your grocery list is empty</h3>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">Add custom items above or rebuild from your planned meals.</p>
-          <button class="btn btn-sm" onclick="GroceryView.regenerate()">🔄 Rebuild from Meal Plan</button>
+          <button class="btn btn-sm" onclick="GroceryView.regenerate()">${Icons.render('refresh', 14)} Rebuild from Meal Plan</button>
         </div>
       `;
       this.updateProgress(0, 0);
@@ -241,7 +247,7 @@ const GroceryView = {
                     <small class="grocery-item-from">for ${item.fromRecipes.join(', ')}</small>
                   ` : ''}
                 </div>
-                <button class="btn-remove-grocery-item" onclick="event.stopPropagation(); GroceryView.deleteItem('${item.id}')" title="Delete item">✕</button>
+                <button class="btn-remove-grocery-item" onclick="event.stopPropagation(); GroceryView.deleteItem('${item.id}')" title="Delete item">${Icons.render('close', 14)}</button>
               </li>
             `).join('')}
           </ul>
@@ -358,7 +364,9 @@ const GroceryView = {
     this.state.hideChecked = !this.state.hideChecked;
     const btn = document.getElementById('grocery-hide-btn');
     if (btn) {
-      btn.innerText = this.state.hideChecked ? '👁️ Show All' : '👁️ Hide Checked';
+      btn.innerHTML = this.state.hideChecked
+        ? `${Icons.render('eye', 14)} Show All`
+        : `${Icons.render('eyeOff', 14)} Hide Checked`;
       if (this.state.hideChecked) {
         btn.classList.add('active');
       } else {
@@ -440,14 +448,14 @@ const GroceryView = {
     const isCollapsed = Boolean(this.state.pantryReportCollapsed);
 
     let html = `
-      <div class="pantry-reconciliation-card" style="margin-bottom: 1.25rem; background: linear-gradient(135deg, rgba(0, 240, 255, 0.07), rgba(16, 185, 129, 0.07)); border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 1rem; padding: 1rem 1.25rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);">
+      <div class="pantry-reconciliation-card">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem;">
           <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <span style="font-size: 1.35rem;">💡</span>
+            <span style="color: var(--accent); display: inline-flex;">${Icons.render('lightbulb', 20)}</span>
             <div>
-              <h3 style="margin: 0; font-size: 1.05rem; color: #f8fafc; display: flex; align-items: center; gap: 0.5rem;">
+              <h3 style="margin: 0; font-size: 1.05rem; color: var(--text); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                 Pantry Check: You May Have These Already
-                <span class="category-badge" style="background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan); font-weight: 700;">${matches.length}</span>
+                <span class="pill-badge pill-badge-success">${matches.length}</span>
               </h3>
               <p style="margin: 0.15rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">
                 Cross-referenced with your kitchen pantry records.
@@ -456,11 +464,11 @@ const GroceryView = {
           </div>
 
           <div style="display: flex; gap: 0.4rem; align-items: center;">
-            <button type="button" class="btn btn-sm" style="background: var(--success); font-weight: 700; padding: 0.45rem 0.85rem;" onclick="GroceryView.checkOffAllPantryMatches()">
-              ✓ Check Off All (${matches.length})
+            <button type="button" class="btn btn-success btn-sm" onclick="GroceryView.checkOffAllPantryMatches()">
+              ${Icons.render('check', 14)} Check Off All (${matches.length})
             </button>
-            <button type="button" class="btn btn-outline btn-sm" style="padding: 0.45rem 0.65rem;" onclick="GroceryView.togglePantryReport()">
-              ${isCollapsed ? '▼ Show' : '▲ Hide'}
+            <button type="button" class="btn btn-outline btn-sm" onclick="GroceryView.togglePantryReport()">
+              ${isCollapsed ? `${Icons.render('chevronDown', 14)} Show` : `${Icons.render('chevronUp', 14)} Hide`}
             </button>
           </div>
         </div>
@@ -468,32 +476,33 @@ const GroceryView = {
 
     if (!isCollapsed) {
       html += `
-        <div style="margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; gap: 0.5rem;">
+        <div style="margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 0.5rem;">
           ${matches.map(m => `
-            <div class="pantry-reconciliation-row" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.06); padding: 0.65rem 0.85rem; border-radius: 0.65rem; flex-wrap: wrap; gap: 0.6rem;">
+            <div class="pantry-reconciliation-row">
               <div style="flex: 1; min-width: 200px;">
-                <div style="font-size: 0.925rem; font-weight: 600; color: #f8fafc;">
-                  ${m.groceryItem.quantity ? `<span style="color: var(--accent-cyan);">${m.groceryItem.quantity}</span> ` : ''}${m.groceryItem.ingredient}
+                <div style="font-size: 0.925rem; font-weight: 600; color: var(--text);">
+                  ${m.groceryItem.quantity ? `<span style="color: var(--primary);">${m.groceryItem.quantity}</span> ` : ''}${m.groceryItem.ingredient}
                   ${m.groceryItem.fromRecipes && m.groceryItem.fromRecipes.length > 0 ? `
                     <small style="color: var(--text-muted); font-weight: normal; font-size: 0.775rem;">(for ${m.groceryItem.fromRecipes.join(', ')})</small>
                   ` : ''}
                 </div>
-                <div style="font-size: 0.8rem; color: #38ef7d; margin-top: 0.2rem; display: flex; align-items: center; gap: 0.35rem;">
-                  <span>🥫 In Pantry:</span>
-                  <span style="font-weight: 600; color: #f8fafc;">${m.pantryItem.name}</span>
+                <div style="font-size: 0.8rem; color: var(--success); margin-top: 0.2rem; display: flex; align-items: center; gap: 0.35rem;">
+                  ${Icons.render('pantry', 13)}
+                  <span>In Pantry:</span>
+                  <span style="font-weight: 600; color: var(--text);">${m.pantryItem.name}</span>
                   ${m.pantryItem.quantity ? `<span style="color: var(--text-muted);">(${m.pantryItem.quantity})</span>` : ''}
                 </div>
               </div>
 
               <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-                <button type="button" class="btn btn-sm" style="background: var(--success); font-weight: 600; padding: 0.4rem 0.75rem; font-size: 0.825rem;" onclick="GroceryView.confirmHaveInPantry('${m.groceryItem.id}')" title="Check off grocery item because you already have it in the pantry">
-                  ✓ Have It
+                <button type="button" class="btn btn-success btn-sm" onclick="GroceryView.confirmHaveInPantry('${m.groceryItem.id}')" title="Check off grocery item because you already have it in the pantry">
+                  ${Icons.render('check', 14)} Have It
                 </button>
-                <button type="button" class="btn btn-outline btn-sm" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171; padding: 0.4rem 0.75rem; font-size: 0.825rem;" onclick="GroceryView.removeFromPantryAndKeepOnList('${m.pantryItem.id}', '${m.pantryItem.name.replace(/'/g, "\\'")}', '${m.groceryItem.id}')" title="You ran out: Remove from pantry database and keep on grocery list">
-                  🗑️ Out of Stock
+                <button type="button" class="btn btn-danger-outline btn-sm" onclick="GroceryView.removeFromPantryAndKeepOnList('${m.pantryItem.id}', '${m.pantryItem.name.replace(/'/g, "\\'")}', '${m.groceryItem.id}')" title="You ran out: Remove from pantry database and keep on grocery list">
+                  ${Icons.render('trash', 14)} Out of Stock
                 </button>
-                <button type="button" class="btn btn-outline btn-sm" style="padding: 0.4rem 0.55rem; font-size: 0.8rem; color: var(--text-muted);" onclick="GroceryView.dismissPantryMatch('${m.groceryItem.id}')" title="Dismiss this suggestion (keep on shopping list without changing pantry)">
-                  ✕
+                <button type="button" class="icon-btn" onclick="GroceryView.dismissPantryMatch('${m.groceryItem.id}')" title="Dismiss this suggestion (keep on shopping list without changing pantry)">
+                  ${Icons.render('close', 14)}
                 </button>
               </div>
             </div>

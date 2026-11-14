@@ -5,41 +5,66 @@ const ContextView = {
   currentModel: 'gemini-3.8-flash',
 
   async render() {
+    const currentTheme = window.Theme ? Theme.get() : 'dark';
     return `
       <div class="view" id="context-view">
-        <h2 style="margin-bottom: 0.5rem; font-size: 1.65rem;">⚙️ Settings & Household Rules</h2>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Manage your meal planning preferences, Gemini API credentials, and app updates.</p>
+        <h2 class="section-heading" style="margin-bottom: 0.45rem; font-size: 1.65rem;">
+          ${Icons.render('settings', 24)} Settings & Household Rules
+        </h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.75rem;">Manage your appearance, meal planning preferences, Gemini API credentials, and app updates.</p>
+
+        <!-- Appearance / Theme Card -->
+        <div class="surface-card">
+          <h3 class="section-heading" style="margin-bottom: 0.85rem;">
+            ${Icons.render('sun', 18)} Appearance & Theme
+          </h3>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="ctx-theme-select">Color Theme</label>
+            <select id="ctx-theme-select" onchange="Theme.apply(this.value)">
+              <option value="dark" ${currentTheme === 'dark' ? 'selected' : ''}>Warm Dark (Default)</option>
+              <option value="light" ${currentTheme === 'light' ? 'selected' : ''}>Warm Parchment Light</option>
+            </select>
+          </div>
+        </div>
         
         <form id="context-form" onsubmit="ContextView.save(event)">
           <!-- Gemini API Key & Model Card -->
-          <div class="form-group" style="background: var(--surface); padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border); margin-bottom: 1.5rem;">
-            <label for="geminiApiKey" style="font-weight: 600; font-size: 0.95rem;">🔑 Google Gemini API Key</label>
-            <input type="password" id="geminiApiKey" placeholder="AIzaSy... (Paste key here)" style="margin-bottom: 0.5rem;">
-            <p id="api-key-status" style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;"></p>
+          <div class="surface-card">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="geminiApiKey" class="section-heading" style="font-size: 0.95rem; margin-bottom: 0.45rem;">
+                ${Icons.render('key', 16)} Google Gemini API Key
+              </label>
+              <input type="password" id="geminiApiKey" placeholder="AIzaSy... (Paste key here)" style="margin-bottom: 0.5rem;">
+              <p id="api-key-status" style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;"></p>
+            </div>
 
             <!-- Gemini Model Selection -->
             <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.5rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.4rem;">
-                <label for="geminiModel" style="font-weight: 600; font-size: 0.95rem; margin: 0;">🤖 Gemini Model</label>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.4rem;">
+                <label for="geminiModel" class="section-heading" style="font-size: 0.95rem; margin: 0;">
+                  ${Icons.render('sparkles', 16)} Gemini Model
+                </label>
                 <button type="button" class="btn btn-outline btn-sm" style="padding: 0.25rem 0.55rem; font-size: 0.775rem;" onclick="ContextView.fetchModels(true)" id="btn-fetch-models">
-                  🔄 Fetch Available Models
+                  ${Icons.render('refresh', 14)} Fetch Available Models
                 </button>
               </div>
-              <select id="geminiModel" style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 0.6rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.9rem; margin-bottom: 0.4rem;">
+              <select id="geminiModel" style="margin-bottom: 0.45rem;">
                 <option value="gemini-3.8-flash">Gemini 3.8 Flash (Default)</option>
               </select>
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                 <p id="model-status-note" style="font-size: 0.775rem; color: var(--text-muted); margin: 0;">
                   Default: <strong>Gemini 3.8 Flash</strong>. Queried dynamically from your Google Gemini account.
                 </p>
-                <span id="model-source-badge" style="font-size: 0.725rem; padding: 0.15rem 0.5rem; border-radius: 1rem; background: rgba(0, 240, 255, 0.1); color: var(--accent-cyan);"></span>
+                <span id="model-source-badge" class="pill-badge"></span>
               </div>
             </div>
           </div>
 
           <!-- Household Preferences Card -->
-          <div style="background: var(--surface); padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border); margin-bottom: 1.5rem;">
-            <h3 style="font-size: 1.05rem; margin-bottom: 1rem; color: #f8fafc;">🥗 Household Meal Preferences</h3>
+          <div class="surface-card">
+            <h3 class="section-heading" style="margin-bottom: 1rem;">
+              ${Icons.render('utensils', 18)} Household Meal Preferences
+            </h3>
             
             <div class="form-group">
               <label for="rule">Planning Rules & Cuisine Preferences</label>
@@ -58,51 +83,58 @@ const ContextView = {
               </div>
             </div>
             
-            <div class="form-group" style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
-              <input type="checkbox" id="leftoversEnabled" style="width: auto;">
+            <div class="form-group" style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.25rem;">
+              <input type="checkbox" id="leftoversEnabled" style="width: auto; margin-bottom: 0;">
               <label for="leftoversEnabled" style="margin: 0; cursor: pointer;">Include multi-day meals / leftovers</label>
             </div>
           </div>
           
-          <button type="submit" class="btn" style="margin-bottom: 2rem;">Save Settings & Household Preferences</button>
+          <button type="submit" class="btn" style="margin-bottom: 1.75rem;">
+            ${Icons.render('check', 16)} Save Settings & Household Preferences
+          </button>
         </form>
 
         <!-- System & Zero-Rebuild Updates Card -->
-        <div class="system-update-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.25rem; margin-bottom: 2rem;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div class="surface-card system-update-card" style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
             <div>
-              <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.4rem;">
-                🔄 App Updates & Version
+              <h3 class="section-heading" style="font-size: 1.1rem;">
+                ${Icons.render('refresh', 18)} App Updates & Version
               </h3>
               <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
                 Pull updates directly from GitHub without rebuilding Docker containers.
               </p>
             </div>
             <button class="btn btn-outline btn-sm" id="btn-check-updates" onclick="ContextView.checkUpdates()">
-              🔍 Check for Updates
+              ${Icons.render('search', 14)} Check for Updates
             </button>
           </div>
 
-          <div id="system-status-info" style="margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); background: rgba(255,255,255,0.03); padding: 0.85rem 1rem; border-radius: 0.65rem; border: 1px solid var(--border);">
+          <div id="system-status-info" style="margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); background: var(--surface-elevated); padding: 0.85rem 1rem; border-radius: 0.65rem; border: 1px solid var(--border);">
             Loading version details...
           </div>
 
           <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-            <button id="btn-run-update" class="btn" style="background: var(--primary); padding: 0.65rem 1.25rem; font-size: 0.9rem;" onclick="ContextView.runUpdate()">
-              🚀 Pull Latest Updates & Restart
+            <button id="btn-run-update" class="btn" style="padding: 0.65rem 1.25rem; font-size: 0.9rem;" onclick="ContextView.runUpdate()">
+              ${Icons.render('download', 15)} Pull Latest Updates & Restart
             </button>
             <button class="btn btn-outline btn-sm" style="color: var(--text-muted); font-size: 0.8rem;" onclick="ContextView.runForceSync()" title="Force overwrite any local changes and sync to GitHub main">
-              ⚡ Force Sync (Hard Reset)
+              ${Icons.render('refresh', 14)} Force Sync (Hard Reset)
             </button>
           </div>
 
-          <div id="system-update-logs" style="display: none; margin-top: 1rem; font-family: monospace; font-size: 0.8rem; background: #000; padding: 0.85rem; border-radius: 0.5rem; color: #a5b4fc; max-height: 180px; overflow-y: auto; white-space: pre-wrap;"></div>
+          <div id="system-update-logs" style="display: none; margin-top: 1rem; font-family: monospace; font-size: 0.8rem; background: var(--surface-input); border: 1px solid var(--border); padding: 0.85rem; border-radius: 0.5rem; color: var(--text-secondary); max-height: 180px; overflow-y: auto; white-space: pre-wrap;"></div>
         </div>
       </div>
     `;
   },
   
   async init() {
+    const themeSelect = document.getElementById('ctx-theme-select');
+    if (themeSelect && window.Theme) {
+      themeSelect.value = Theme.get();
+    }
+
     const data = await api.context.get();
     if (data) {
       document.getElementById('rule').value = data.rule || '';
@@ -113,13 +145,13 @@ const ContextView = {
       
       const statusEl = document.getElementById('api-key-status');
       if (data.isEnvApiKey) {
-        statusEl.innerHTML = `✅ Configured via environment variable (<code style="color: var(--accent-cyan);">GEMINI_API_KEY</code>).`;
+        statusEl.innerHTML = `<span style="color: var(--success); display: inline-flex;">${Icons.render('check', 14)}</span> Configured via environment variable (<code style="color: var(--primary);">GEMINI_API_KEY</code>).`;
         document.getElementById('geminiApiKey').placeholder = "Configured via environment variable";
       } else if (data.hasApiKey) {
-        statusEl.innerHTML = `✅ Key is set and saved in your settings.`;
+        statusEl.innerHTML = `<span style="color: var(--success); display: inline-flex;">${Icons.render('check', 14)}</span> Key is set and saved in your settings.`;
         document.getElementById('geminiApiKey').value = "••••••••";
       } else {
-        statusEl.innerHTML = `⚠️ No API Key set. Enter your key above or set <code style="color: var(--accent-cyan);">GEMINI_API_KEY</code> in Docker.`;
+        statusEl.innerHTML = `<span style="color: var(--accent); display: inline-flex;">${Icons.render('lightbulb', 14)}</span> No API Key set. Enter your key above or set <code style="color: var(--primary);">GEMINI_API_KEY</code> in Docker.`;
       }
     }
 
@@ -132,7 +164,7 @@ const ContextView = {
     const modelSelect = document.getElementById('geminiModel');
     const badgeEl = document.getElementById('model-source-badge');
     if (btn) {
-      btn.textContent = '⏳ Loading...';
+      btn.innerHTML = `${Icons.render('refresh', 14)} Loading...`;
       btn.disabled = true;
     }
 
@@ -163,13 +195,11 @@ const ContextView = {
 
       if (badgeEl) {
         if (res.source === 'api') {
-          badgeEl.textContent = `🟢 ${models.length} live models loaded`;
-          badgeEl.style.color = '#34d399';
-          badgeEl.style.background = 'rgba(16, 185, 129, 0.12)';
+          badgeEl.className = 'pill-badge pill-badge-success';
+          badgeEl.innerHTML = `${Icons.render('check', 12)} ${models.length} live models loaded`;
         } else {
-          badgeEl.textContent = `⚪ Default models`;
-          badgeEl.style.color = 'var(--text-muted)';
-          badgeEl.style.background = 'rgba(255, 255, 255, 0.05)';
+          badgeEl.className = 'pill-badge';
+          badgeEl.textContent = 'Default models';
         }
       }
 
@@ -180,7 +210,7 @@ const ContextView = {
       if (showToast) Toast.show('Could not fetch models: ' + e.message, 'warning');
     } finally {
       if (btn) {
-        btn.textContent = '🔄 Fetch Available Models';
+        btn.innerHTML = `${Icons.render('refresh', 14)} Fetch Available Models`;
         btn.disabled = false;
       }
     }
@@ -217,21 +247,21 @@ const ContextView = {
 
       let badgeHtml = '';
       if (status.behindCount > 0) {
-        badgeHtml = `<span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.15rem 0.5rem; border-radius: 0.5rem; font-weight: 600;">⚡ ${status.behindCount} new update(s) available</span>`;
+        badgeHtml = `<span class="pill-badge pill-badge-accent">${Icons.render('sparkles', 12)} ${status.behindCount} new update(s) available</span>`;
       } else if (status.remoteStatus === 'up_to_date') {
-        badgeHtml = `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.15rem 0.5rem; border-radius: 0.5rem; font-weight: 600;">✅ App is up to date</span>`;
+        badgeHtml = `<span class="pill-badge pill-badge-success">${Icons.render('check', 12)} App is up to date</span>`;
       }
 
       infoEl.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
           <div>
-            <strong>Current Version:</strong> <code style="color: var(--accent-cyan); font-weight: 700;">${status.commit}</code> (${status.branch})
+            <strong>Current Version:</strong> <code style="color: var(--primary); font-weight: 700;">${status.commit}</code> (${status.branch})
           </div>
           <div>${badgeHtml}</div>
         </div>
-        ${status.lastCommitMessage ? `<div style="color: var(--text); font-size: 0.85rem; margin-bottom: 0.25rem;">📝 <em>${status.lastCommitMessage}</em></div>` : ''}
+        ${status.lastCommitMessage ? `<div style="color: var(--text); font-size: 0.85rem; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.35rem;">${Icons.render('fileText', 13)} <em>${status.lastCommitMessage}</em></div>` : ''}
         ${status.lastCommitDate ? `<div style="font-size: 0.775rem; color: var(--text-muted);">Committed: ${status.lastCommitDate}</div>` : ''}
-        ${status.remoteError ? `<div style="color: #f87171; font-size: 0.75rem; margin-top: 0.35rem;">⚠️ Git remote notice: ${status.remoteError}</div>` : ''}
+        ${status.remoteError ? `<div style="color: var(--danger); font-size: 0.75rem; margin-top: 0.35rem;">Git remote notice: ${status.remoteError}</div>` : ''}
       `;
     } catch (e) {
       infoEl.innerHTML = `<p style="color: var(--text-muted); margin: 0;">Could not load Git system status.</p>`;
@@ -240,14 +270,14 @@ const ContextView = {
 
   async checkUpdates() {
     const btn = document.getElementById('btn-check-updates');
-    const orig = btn.innerText;
-    btn.innerText = 'Checking...';
+    const orig = btn.innerHTML;
+    btn.textContent = 'Checking...';
     btn.disabled = true;
     try {
       await this.loadSystemStatus(true);
       Toast.show('Checked remote repository for updates.', 'info');
     } finally {
-      btn.innerText = orig;
+      btn.innerHTML = orig;
       btn.disabled = false;
     }
   },
@@ -258,8 +288,8 @@ const ContextView = {
 
     const btn = document.getElementById('btn-run-update');
     const logsEl = document.getElementById('system-update-logs');
-    const origText = btn.textContent;
-    btn.textContent = '⏳ Pulling updates...';
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = `${Icons.render('refresh', 15)} Pulling updates...`;
     btn.disabled = true;
 
     if (logsEl) {
@@ -270,7 +300,7 @@ const ContextView = {
     try {
       const res = await api.system.update(force);
       if (logsEl) {
-        logsEl.innerText += (res.logs || '') + '\n\n✅ Updates successfully pulled!\nRestarting server process... Waiting for reconnection...';
+        logsEl.innerText += (res.logs || '') + '\n\nUpdates successfully pulled!\nRestarting server process... Waiting for reconnection...';
       }
 
       Toast.show(res.updated ? 'App updated! Server restarting...' : 'Already latest version. Restarting server...', 'success');
@@ -279,10 +309,10 @@ const ContextView = {
       await this.pollUntilServerRestarted();
     } catch (err) {
       if (logsEl) {
-        logsEl.innerText += `\n❌ Update error: ${err.message}`;
+        logsEl.innerText += `\nUpdate error: ${err.message}`;
       }
       Toast.show('Update failed: ' + err.message, 'danger');
-      btn.textContent = origText;
+      btn.innerHTML = origHtml;
       btn.disabled = false;
       this.isUpdating = false;
     }
@@ -300,7 +330,7 @@ const ContextView = {
 
   async pollUntilServerRestarted() {
     const btn = document.getElementById('btn-run-update');
-    if (btn) btn.textContent = '🔄 Reconnecting...';
+    if (btn) btn.innerHTML = `${Icons.render('refresh', 15)} Reconnecting...`;
 
     const maxWaitMs = 15000;
     const startTime = Date.now();
